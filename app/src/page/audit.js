@@ -1,28 +1,60 @@
 import '../style/audit.css'
 import {useEffect, useState} from "react";
+import AuditForm from "../component/AuditForm";
+import api from "../axiosConfig"
 
 function Audit() {
 
-    const [items, setItems] = useState("");
+    const [guides, setGuides] = useState([]);
+    const [activeGuide, setActiveGuide] = useState(null);
+    const [isActive, setIsActive] = useState(false);
+
 
     useEffect(() => {
-        fetch("http://localhost:8080/test",
-            {
-                method: 'GET',
-                headers: {
-                    'Content-Type': "application/json",
-                }
-            })
-            .then(res => res.text())
-            .then(data => setItems(data))
-            .catch(err => console.error(err));
+        (async () => {
+            try {
+                const res = await api.get("/guidelines/titles");
+                setGuides(res.data);
+            } catch (err) {
+                console.error(err);
+            }
+        })();
     }, []);
+
+    function openForm(guide){
+        setIsActive(true);
+        setActiveGuide(guide);
+        console.log(guide.title);
+    }
 
 
     return (
     <div className="container">
       <div className="box">
-            {items}
+          <div hidden={isActive}>
+          <div>
+              <div className="header-title">
+                  <p>Fill in the form for each guideline</p>
+                  <hr className="solid"/>
+              </div>
+          </div>
+              <div className="guides-display">
+              {guides.map((g) => (
+                  <div className="guides-card" onClick={() => openForm(g)}>
+                      {g.refId} {g.title}
+                  </div>
+              ))}
+          </div>
+          </div>
+
+          {isActive && (
+              <AuditForm
+                  open={isActive}
+                  children={activeGuide}
+                  close={() => setIsActive(false)}
+              />
+          )}
+
       </div>
     </div>
   );

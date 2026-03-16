@@ -1,12 +1,34 @@
 .container {
     padding-left: 40px;
     padding-right: 40px;
+    margin-bottom: 40px;
 }
 
 .box {
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-    border-top-right-radius: 84px;
-    border-top-left-radius: 84px;
+    border-radius: 84px;
     justify-content: center;
-    display: flex;
+    padding: 50px;
+    /*display: flex;*/
+}
+
+.header-title {
+    font-size: 26px;
+    font-weight: bold;
+}
+
+.guides-display {
+    padding: 10px;
+}
+
+.guides-card {
+    margin: 10px;
+    padding: 15px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-radius: 10px;
+}
+
+i {
+    font-weight: normal;
+    font-size: 20px;
 }

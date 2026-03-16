@@ -1,5 +1,6 @@
 package com.audit.server.rest;
 
+import com.audit.server.dto.GuidelineResponse;
 import com.audit.server.model.Guideline;
 import com.audit.server.repo.GuidelineRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,16 +25,16 @@ public class GuidelineController {
         return repo.findAll();
     }
 
-    @GetMapping(path = "/ids", produces = "application/json")
-    public List<String> getAllIds() {
-        List<Guideline> guidelines = repo.findAll();
-        List<String> ids = new ArrayList<>();
+    @GetMapping(path = "/titles", produces = "application/json")
+    public List<GuidelineResponse> getAllIds() {
+        List<Guideline> list = repo.findAll();
+        List<GuidelineResponse> response = new ArrayList<>();
 
-        for (Guideline g : guidelines){
-            ids.add(String.valueOf(g.getId()));
+        for (Guideline g : list){
+            response.add(new GuidelineResponse(g.getId(), g.getRefId(), g.getTitle()));
         }
 
-        return ids;
+        return response;
     }
 
     @GetMapping(path = "/{id}", produces = "application/json")

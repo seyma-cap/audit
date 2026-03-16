@@ -1,0 +1,27 @@
+form {
+    padding: 10px;
+}
+
+input[type=text], select {
+    padding: 12px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+input[type=submit] {
+    color: white;
+    padding: 14px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.titleForm {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+}
