@@ -8,13 +8,19 @@ function Audit() {
     const [guides, setGuides] = useState([]);
     const [activeGuide, setActiveGuide] = useState(null);
     const [isActive, setIsActive] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false);
 
 
     useEffect(() => {
         (async () => {
             try {
                 const res = await api.get("/guidelines/titles");
-                setGuides(res.data);
+                const sorted = res.data.sort((a, b) => {
+                    return a.refId.localeCompare(b.refId, undefined, { numeric: true });
+                });
+
+                setGuides(sorted);
+                setIsLoaded(true);
             } catch (err) {
                 console.error(err);
             }
@@ -24,7 +30,6 @@ function Audit() {
     function openForm(guide){
         setIsActive(true);
         setActiveGuide(guide);
-        console.log(guide.title);
     }
 
 
@@ -53,6 +58,12 @@ function Audit() {
                   children={activeGuide}
                   close={() => setIsActive(false)}
               />
+          )}
+
+          {!isLoaded && (
+              <div className="loading-container">
+                  Loading...
+              </div>
           )}
 
       </div>

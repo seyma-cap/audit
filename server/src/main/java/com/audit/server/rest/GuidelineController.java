@@ -31,7 +31,7 @@ public class GuidelineController {
         List<GuidelineResponse> response = new ArrayList<>();
 
         for (Guideline g : list){
-            response.add(new GuidelineResponse(g.getId(), g.getRefId(), g.getTitle()));
+            response.add(new GuidelineResponse(g.getId().toString(), g.getRefId(), g.getTitle()));
         }
 
         return response;

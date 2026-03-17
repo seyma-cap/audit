@@ -32,3 +32,10 @@ i {
     font-weight: normal;
     font-size: 20px;
 }
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 20px;
+}

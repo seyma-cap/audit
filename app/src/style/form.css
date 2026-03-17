@@ -12,7 +12,7 @@ input[type=text], select {
 }
 
 input[type=submit] {
-    color: white;
+    color: #fff;
     padding: 14px;
     margin: 8px 0;
     border: none;
@@ -24,4 +24,49 @@ input[type=submit] {
     width: 50%;
     display: flex;
     flex-direction: column;
+}
+
+textarea {
+    padding: 12px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.header-space {
+    display: flex;
+    width: 100%;
+}
+
+.text-space {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.button-group {
+    display: flex;
+    margin: 10px;
+}
+
+.button-form {
+    background-color: #1EAADB;
+    color: #fff;
+    padding: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    font-family: 'Inter';
+    padding-inline: 20px;
+}
+
+i {
+    padding: 4px;
+    padding-inline: 10px;
 }
