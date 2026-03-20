@@ -25,19 +25,15 @@ public class TestController {
     @Autowired
     JSoupService jSoupService;
 
-    private final OpenAiChatModel chatModel;
+    private final AiService aiService;
 
-    @Autowired
-    public TestController(OpenAiChatModel chatModel) {
-        this.chatModel = chatModel;
+    public TestController(AiService aiService) {
+        this.aiService = aiService;
     }
 
     @GetMapping("/ai/generate")
-    public Map<String, Object> generate(@RequestParam String message) throws JsonProcessingException {
-        String engineeredMessage = "Get a fresh perspective! Simply provide a message, and rephrase it into one big sentence for my ecommerce application.Only give me the result. I don't need extra details. Here's the input: " + message;
-        Prompt prompt = new Prompt(new UserMessage(engineeredMessage));
-        ChatResponse response = this.chatModel.call(prompt);
-        return Map.of("result", response);
+    public Map<String, Object> generate(@RequestParam String message) {
+        return Map.of("generation", aiService.ask(message));
     }
 
     @GetMapping(path = "/jsoup", produces = "application/json")
@@ -46,9 +42,4 @@ public class TestController {
         String response = "crawler works";
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
-
-//    @GetMapping(path = "/ai", produces = "application/json")
-//    public ResponseEntity<String> testAi(@RequestParam(value = "message", defaultValue = "Tell me a joke") String message){
-//        return ResponseEntity.status(HttpStatus.OK).body(aiService.getResponse(message));
-//    }
 }
