@@ -1,14 +1,8 @@
 package com.audit.server;
 
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 
-import java.io.IOException;
 
 @SpringBootApplication
 public class ServerApplication {

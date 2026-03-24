@@ -9,9 +9,9 @@ import java.io.IOException;
 @Service
 public class JSoupService {
 
-    public void getData(){
+    public void getData(String url){
         try {
-            Document webPage = Jsoup.connect("https://en.wikipedia.org/wiki/STAYC").get();
+            Document webPage = Jsoup.connect(url).get();
             System.out.println(webPage);
         } catch (IOException e) {
             throw new RuntimeException(e);

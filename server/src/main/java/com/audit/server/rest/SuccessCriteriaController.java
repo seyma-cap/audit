@@ -3,9 +3,7 @@ package com.audit.server.rest;
 import com.audit.server.projection.SuccessCriteriaProjection;
 import com.audit.server.repo.SuccessCriteriaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -19,5 +17,12 @@ public class SuccessCriteriaController {
     @GetMapping(path = "/all", produces = "application/json")
     public List<SuccessCriteriaProjection> getAllGuidelines() {
         return repo.findAllSuccessCriteriaOnly();
+    }
+
+    @GetMapping(path = "/ai_put", produces = "application/json")
+    public List<String> getAiRecommendation(@RequestParam String criteriaId, @RequestParam String auditId) {
+
+
+        return List.of();
     }
 }

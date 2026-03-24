@@ -2,10 +2,16 @@ import "../style/form.css";
 import {useEffect, useState} from "react";
 import api from "../axiosConfig";
 
-function AuditForm({ children, open, close }) {
+function AuditForm({ children, object, open, close }) {
     const [criteria, setCriteria] = useState([]);
     const [activeCriteria, setActiveCriteria] = useState(null);
     const [isLoaded, setIsLoaded] = useState(false);
+
+    const [score, setScore] = useState(null);
+    const [title, setTitle] = useState("");
+    const [description, setDescription] = useState("");
+    const [recommendation, setRecommendation] = useState("");
+    const [comment, setComment] = useState("");
 
     useEffect(() => {
         (async () => {
@@ -20,6 +26,16 @@ function AuditForm({ children, open, close }) {
             }
         })();
     }, [])
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await api.get(`/criteria/ai_put?id=${activeCriteria.refId}&url=${object}`, )
+            } catch (err) {
+                console.log(err)
+            }
+        })();
+    }, [activeCriteria])
 
     function selectNextCriteria() {
         const index = criteria.findIndex(c => c.refId === activeCriteria.refId);
@@ -39,6 +55,14 @@ function AuditForm({ children, open, close }) {
         } else {
             close();
         }
+    }
+
+    async function saveAnswer(){
+        console.log(activeCriteria.refId)
+        console.log(title)
+        console.log(description)
+        console.log(recommendation)
+        console.log(comment)
     }
 
     return (
@@ -63,7 +87,9 @@ function AuditForm({ children, open, close }) {
                                         <i className="bi bi-arrow-bar-left"></i>
                                         Back
                                     </button>
-                                    <button style={{ "background-color": "#106DAA"}} className="button-form">Save
+                                    <button style={{ "background-color": "#106DAA"}}
+                                            className="button-form"
+                                            onClick={() => saveAnswer()}>Save
                                         <i className="bi bi-floppy-fill"></i></button>
                                     <button className="button-form"
                                             onClick={selectNextCriteria}>
@@ -94,21 +120,41 @@ function AuditForm({ children, open, close }) {
                             </select>
                             <div className="titleForm">
                                 <label htmlFor="answerTitle">Title</label>
-                                <input id="answerTitle" name="answerTitle" type="text"/>
+                                <input
+                                    id="answerTitle"
+                                    name="answerTitle"
+                                    type="text"
+                                    value={title}
+                                    onChange={e => setTitle(e.target.value)}/>
                             </div>
                             <div>
                                 <div className="titleForm">
                                     <label htmlFor="answerDesc">Description</label>
-                                    <textarea id="answerDesc" name="answerDesc" rows="5"/>
+                                    <textarea
+                                        id="answerDesc"
+                                        name="answerDesc"
+                                        rows="5"
+                                        value={description}
+                                        onChange={e => setDescription(e.target.value)}/>
                                 </div>
                                 <div className="titleForm">
                                     <label htmlFor="answerRec">Recommendation</label>
-                                    <textarea id="answerRec" name="answerRec" rows="5"/>
+                                    <textarea
+                                        id="answerRec"
+                                        name="answerRec"
+                                        rows="5"
+                                        value={recommendation}
+                                        onChange={e => setRecommendation(e.target.value)}/>
                                 </div>
                             </div>
                             <div className="titleForm">
                                 <label htmlFor="answerCom">Comments</label>
-                                <textarea id="answerCom" name="answerCom" rows="5"/>
+                                <textarea
+                                    id="answerCom"
+                                    name="answerCom"
+                                    rows="5"
+                                    value={comment}
+                                    onChange={e => setComment(e.target.value)}/>
                             </div>
 
                         </form>

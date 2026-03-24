@@ -4,10 +4,7 @@ import com.audit.server.dto.GuidelineResponse;
 import com.audit.server.model.Guideline;
 import com.audit.server.repo.GuidelineRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;

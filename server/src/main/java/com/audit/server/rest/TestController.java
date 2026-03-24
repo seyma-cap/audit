@@ -38,7 +38,7 @@ public class TestController {
 
     @GetMapping(path = "/jsoup", produces = "application/json")
     public ResponseEntity<String> testApi(){
-        jSoupService.getData();
+        jSoupService.getData("https://en.wikipedia.org/wiki/STAYC");
         String response = "crawler works";
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
