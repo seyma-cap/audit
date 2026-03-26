@@ -30,7 +30,7 @@ function AuditForm({ children, object, open, close }) {
     useEffect(() => {
         (async () => {
             try {
-                const res = await api.get(`/criteria/ai_put?id=${activeCriteria.refId}&url=${object}`, )
+                const res = await api.get(`/criteria/ai_put?criteriaId=${activeCriteria.refId}&auditId=${object}`, )
             } catch (err) {
                 console.log(err)
             }
