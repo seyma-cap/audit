@@ -25,7 +25,7 @@ public class SuccessCriteriaController {
     }
 
     @GetMapping(path = "/ai_put", produces = "application/json")
-    public Map<String, String> getAiRecommendation(@RequestParam String criteriaId, @RequestParam String auditId) {
+    public String getAiRecommendation(@RequestParam String criteriaId, @RequestParam String auditId) {
         return aiService.generateResponse(criteriaId, auditId);
     }
 }
