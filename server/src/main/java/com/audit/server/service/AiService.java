@@ -38,12 +38,12 @@ public class AiService {
         this.jSoupService = jSoupService;
 
         this.criteriaHandlers = Map.of(
-                "1.1.1", url -> checkAltText(jSoupService.getAltText(url)),
-                "3.1.1", url -> checkLanguage(jSoupService.getLangElement(url)),
-                "3.1.2", url -> checkAllLanguage(jSoupService.getAllLangElements(url)),
-                "3.3.1", url -> checkErrorIdentification(jSoupService.getFormElements(url)),
-                "3.3.2", url -> checkFormInstructions(jSoupService.getFormElements(url)),
-                "4.1.2", url -> checkRole(jSoupService.getCustomElements(url))
+                "1.1.1", url -> checkAltText(jSoupService.getAltText(url), url),
+                "3.1.1", url -> checkLanguage(jSoupService.getLangElement(url), url),
+                "3.1.2", url -> checkAllLanguage(jSoupService.getAllLangElements(url), url),
+//                "3.3.1", url -> checkErrorIdentification(jSoupService.getFormElements(url), url),
+                "3.3.2", url -> checkFormInstructions(jSoupService.getFormElements(url), url),
+                "4.1.2", url -> checkRole(jSoupService.getCustomElements(url), url)
         );
     }
 
@@ -100,13 +100,13 @@ public class AiService {
      * @param e Elements that need to be analyzed
      * @return String JSON format with the answer
      */
-    public String checkAltText(Elements e){
+    public String checkAltText(Elements e, String url){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
 
         Map<String, Object> body = Map.of(
-                "model", "meta-llama/llama-4-scout-17b-16e-instruct",
+                "model", "openai/gpt-oss-120b",
                 "messages", List.of(Map.of("role", "user", "content",
                         "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                                 " Do not limit your findings to the violations mentioned in common failures or test rules; explore beyond these areas for potential issues." +
@@ -134,7 +134,9 @@ public class AiService {
                                 "{\n" +
                                 "    \"overall_violation\": \"N/A\",\n" +
                                 "    \"violated_elements_and_reasons\": [}\n" +
-                                "}"))
+                                "}" +
+                                " And finally the URL of the website: " + url +
+                        " Remember no backticks and only respond with the given format."))
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
@@ -157,13 +159,13 @@ public class AiService {
      * @param e boolean whether the tag is present
      * @return String JSON format with the answer
      */
-    public String checkLanguage(boolean e){
+    public String checkLanguage(boolean e, String url){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
 
         Map<String, Object> body = Map.of(
-                "model", "meta-llama/llama-4-scout-17b-16e-instruct",
+                "model", "openai/gpt-oss-120b",
                 "messages", List.of(Map.of("role", "user", "content",
                         "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                                 "Do not limit your findings to the violations mentioned in common failures or test rules; explore beyond these areas for potential issues." +
@@ -187,7 +189,8 @@ public class AiService {
                                 "    \"violated_elements_and_reasons\": [}\n" +
                                 "}" +
                                 "The element has already been checked, i will provide you with a boolean that determines whether the website contains a lang attribute. The boolean is: " + e +
-                        "which means that it is " + e + " that the website contains a lang element. Please only check if the element is present, the other rule will check if it is valid"))
+                        "which means that it is " + e + " that the website contains a lang element. Please only check if the element is present, the other rule will check if it is valid"  +
+                                " And finally the URL of the website: " + url))
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
@@ -209,13 +212,13 @@ public class AiService {
      * @param s String that need to be analyzed
      * @return String JSON format with the answer
      */
-    public String checkAllLanguage(String s){
+    public String checkAllLanguage(String s, String url){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
 
         Map<String, Object> body = Map.of(
-                "model", "meta-llama/llama-4-scout-17b-16e-instruct",
+                "model", "openai/gpt-oss-120b",
                 "messages", List.of(Map.of("role", "user", "content",
                         "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                                 "Only follow the rules provided by the official WCAG rules themselves." +
@@ -243,7 +246,8 @@ public class AiService {
                                 "    \"overall_violation\": \"N/A\",\n" +
                                 "    \"violated_elements_and_reasons\": [}\n" +
                                 "}" +
-                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + s))
+                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + s +
+                                " And finally the URL of the website: " + url))
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
@@ -265,13 +269,13 @@ public class AiService {
      * @param e Elements that need to be analyzed
      * @return String JSON format with the answer
      */
-    public String checkErrorIdentification(Elements e){
+    public String checkErrorIdentification(Elements e, String url){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
 
         Map<String, Object> body = Map.of(
-                "model", "meta-llama/llama-4-scout-17b-16e-instruct",
+                "model", "openai/gpt-oss-120b",
                 "messages", List.of(Map.of("role", "user", "content",
                         "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                                 "Only follow the rules provided by the official WCAG rules themselves." +
@@ -301,7 +305,8 @@ public class AiService {
                                 "    \"overall_violation\": \"N/A\",\n" +
                                 "    \"violated_elements_and_reasons\": [}\n" +
                                 "}" +
-                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + e))
+                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + e +
+                                " And finally the URL of the website: " + url))
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
@@ -323,13 +328,13 @@ public class AiService {
      * @param e Elements that need to be analyzed
      * @return String JSON format with the answer
      */
-    public String checkFormInstructions(Elements e){
+    public String checkFormInstructions(Elements e, String url){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
 
         Map<String, Object> body = Map.of(
-                "model", "meta-llama/llama-4-scout-17b-16e-instruct",
+                "model", "openai/gpt-oss-120b",
                 "messages", List.of(Map.of("role", "user", "content",
                         "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                                 "Only follow the rules provided by the official WCAG rules themselves." +
@@ -358,7 +363,8 @@ public class AiService {
                                 "    \"overall_violation\": \"N/A\",\n" +
                                 "    \"violated_elements_and_reasons\": [}\n" +
                                 "}" +
-                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + e))
+                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + e +
+                                " And finally the URL of the website: " + url))
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
@@ -380,13 +386,13 @@ public class AiService {
      * @param s String that needs to be analyzed
      * @return String JSON format with the answer
      */
-    public String checkRole(String s){
+    public String checkRole(String s, String url){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
 
         Map<String, Object> body = Map.of(
-                "model", "meta-llama/llama-4-scout-17b-16e-instruct",
+                "model", "openai/gpt-oss-120b",
                 "messages", List.of(Map.of("role", "user", "content",
                         "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                                 "Only follow the rules provided by the official WCAG rules themselves." +
@@ -415,7 +421,8 @@ public class AiService {
                                 "    \"overall_violation\": \"N/A\",\n" +
                                 "    \"violated_elements_and_reasons\": [}\n" +
                                 "}" +
-                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + s))
+                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + s +
+                        " And finally the URL of the website: " + url))
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
