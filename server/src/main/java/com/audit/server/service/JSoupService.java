@@ -98,8 +98,6 @@ public class JSoupService {
 
             Elements x = webPage.getElementsByTag("a");
 
-            System.out.println(x);
-
             return x;
         } catch (IOException e){
             throw new RuntimeException(e);
@@ -114,6 +112,21 @@ public class JSoupService {
             Document webPage = Jsoup.connect(url).get();
 
             Elements x = webPage.select("h1, h2, h3, h4, h5, h6, label");
+
+            return x;
+        } catch (IOException e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Checks criterion 2.5.3
+     */
+    public Elements getLabels(String url){
+        try {
+            Document webPage = Jsoup.connect(url).get();
+
+            Elements x = webPage.select("label");
 
             System.out.println(x);
 
