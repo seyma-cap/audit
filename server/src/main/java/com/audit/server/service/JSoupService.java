@@ -7,11 +7,10 @@ import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
- * This class extracts elements from the DOM based on the successcriteria that needs examination, meaning eacht methode
- * belongs to one single criterium
+ * This class extracts elements from the DOM based on the success criteria that needs examination, meaning each methode
+ * belongs to one single criterion
  *
  * @author Seyma Kaya
  */
@@ -28,7 +27,7 @@ public class JSoupService {
     }
 
     /**
-     * Checks criterium 1.1.1
+     * Checks criterion 1.1.1
      */
     public Elements getAltText(String url) {
         try {
@@ -44,7 +43,7 @@ public class JSoupService {
     }
 
     /**
-     *  Checks criterium 1.3.5
+     *  Checks criterion 1.3.5
      */
     public String getLabelsAndInput(String url){
         try {
@@ -54,17 +53,29 @@ public class JSoupService {
             Elements x = webPage.getElementsByTag("label");
             Elements y = webPage.getElementsByTag("input");
 
-            System.out.println();
-
-            return x.toString() + y.toString();
+            return x + y.toString();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    /**
+     * Checks criterion 1.4.2
+     */
+    public Elements getAudioElements(String url){
+        try {
+            Document webPage = Jsoup.connect(url).get();
+
+            Elements x = webPage.getElementsByTag("audio");
+
+            return x;
+        } catch (IOException e){
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
-     * Checks criterium 3.1.1
+     * Checks criterion 3.1.1
      */
     public boolean getLangElement(String url) {
         try {
@@ -80,7 +91,7 @@ public class JSoupService {
     }
 
     /**
-     * Checks criterium 3.1.2
+     * Checks criterion 3.1.2
      */
     public String getAllLangElements(String url) {
         StringBuilder sb = new StringBuilder();
@@ -114,7 +125,7 @@ public class JSoupService {
     }
 
     /**
-     * Checks criterium 3.3.1
+     * Checks criterion 3.3.1
      */
     public Elements getFormElements(String url) {
         try {
@@ -131,7 +142,7 @@ public class JSoupService {
     }
 
     /**
-     * Checks criterium 4.1.2
+     * Checks criterion 4.1.2
      */
     public String getCustomElements(String url) {
         try {
