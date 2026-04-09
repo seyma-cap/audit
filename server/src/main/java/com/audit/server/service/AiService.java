@@ -44,6 +44,9 @@ public class AiService {
                 "1.1.1", url -> checkAltText(jSoupService.getAltText(url), url),
                 "1.3.5", url -> checkLabels(jSoupService.getLabelsAndInput(url)),
                 "1.4.2", url -> checkAudio(jSoupService.getAudioElements(url)),
+                "2.4.2", url -> checkPageTitle(jSoupService.getTitle(url)),
+                "2.4.4", url -> checkLinkPurpose(jSoupService.getLinks(url)),
+                "2.4.6", url -> checkLabelHeadings(jSoupService.getLabelsHeading(url)),
                 "3.1.1", url -> checkLanguage(jSoupService.getLangElement(url), url),
                 "3.1.2", url -> checkAllLanguage(jSoupService.getAllLangElements(url), url),
 //                "3.3.1", url -> checkErrorIdentification(jSoupService.getFormElements(url), url),
@@ -951,6 +954,177 @@ public class AiService {
         List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
         Map<String, Object> msg = (Map<String, Object>) choices.get(0).get("message");
 
+        return msg.get("content").toString();
+    }
+
+    /**
+     * Use for rule 2.4.2
+     * @param e Elements that need to be analyzed
+     * @return String JSON format with the answer
+     */
+    public String checkPageTitle(Elements e){
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+
+        Map<String, Object> body = Map.of(
+                "model", "openai/gpt-oss-120b",
+                "messages", List.of(Map.of("role", "user", "content",
+                        "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
+                                "Only follow the rules provided by the official WCAG rules themselves." +
+                                "The elements I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 2.4.2. " +
+                                "Determine if the titles are descriptive enough and give you a clue on what the website could be about" +
+                                "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
+                                "Give the criteria an answer of failing or passing, and DO NOT use backticks in your answers. Only respond with the JSON." +
+                                "The format is in JSON and right after this line (remember no backticks) \n" +
+                                "{\n" +
+                                "    \"overall_violation\": \"passed or failed\",\n" +
+                                "    \"violated_elements_and_reasons\": [\n" +
+                                "        {\n" +
+                                "            \"title\": \"A single sentence to describe the problem\",\n" +
+                                "            \"description\": \"Explanation of why it violates the criterion\",\n" +
+                                "            \"recommendation\": \"Recommendation to fix the violation for this specific element\"\n" +
+                                "        }\n" +
+                                "    ]\n" +
+                                "}" +
+                                "If there are no violations, the response should be (remember no backticks): \n" +
+                                "{\n" +
+                                "    \"overall_violation\": \"passed\",\n" +
+                                "    \"violated_elements_and_reasons\": [}\n" +
+                                "}" +
+                                "\n If no element is provided you can return (remember no backticks): " +
+                                "{\n" +
+                                "    \"overall_violation\": \"N/A\",\n" +
+                                "    \"violated_elements_and_reasons\": [}\n" +
+                                "}" +
+                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + e))
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        Map<String, Object> response = restTemplate.postForObject(
+                "https://api.groq.com/openai/v1/chat/completions",
+                request,
+                Map.class
+        );
+
+        // Extract the content from the response
+        List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
+        Map<String, Object> msg = (Map<String, Object>) choices.get(0).get("message");
+        return msg.get("content").toString();
+    }
+
+    /**
+     * Use for rule 2.4.4
+     * @param e Elements that need to be analyzed
+     * @return String JSON format with the answer
+     */
+    public String checkLinkPurpose(Elements e){
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+
+        Map<String, Object> body = Map.of(
+                "model", "openai/gpt-oss-120b",
+                "messages", List.of(Map.of("role", "user", "content",
+                        "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
+                                "Only follow the rules provided by the official WCAG rules themselves." +
+                                "The elements I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 2.4.4. " +
+                                "Determine if the titles are descriptive enough and give you a clue on what the link could lead to." +
+                                "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
+                                "Give the criteria an answer of failing or passing, and DO NOT use backticks in your answers. Only respond with the JSON." +
+                                "The format is in JSON and right after this line (remember no backticks) \n" +
+                                "{\n" +
+                                "    \"overall_violation\": \"passed or failed\",\n" +
+                                "    \"violated_elements_and_reasons\": [\n" +
+                                "        {\n" +
+                                "            \"title\": \"A single sentence to describe the problem\",\n" +
+                                "            \"description\": \"Explanation of why it violates the criterion\",\n" +
+                                "            \"recommendation\": \"Recommendation to fix the violation for this specific element\"\n" +
+                                "        }\n" +
+                                "    ]\n" +
+                                "}" +
+                                "If there are no violations, the response should be (remember no backticks): \n" +
+                                "{\n" +
+                                "    \"overall_violation\": \"passed\",\n" +
+                                "    \"violated_elements_and_reasons\": [}\n" +
+                                "}" +
+                                "\n If no element is provided you can return (remember no backticks): " +
+                                "{\n" +
+                                "    \"overall_violation\": \"N/A\",\n" +
+                                "    \"violated_elements_and_reasons\": [}\n" +
+                                "}" +
+                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + e))
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        Map<String, Object> response = restTemplate.postForObject(
+                "https://api.groq.com/openai/v1/chat/completions",
+                request,
+                Map.class
+        );
+
+        // Extract the content from the response
+        List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
+        Map<String, Object> msg = (Map<String, Object>) choices.get(0).get("message");
+        return msg.get("content").toString();
+    }
+
+    /**
+     * Use for rule 2.4.6
+     * @param e Elements that need to be analyzed
+     * @return String JSON format with the answer
+     */
+    public String checkLabelHeadings(Elements e){
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+
+        Map<String, Object> body = Map.of(
+                "model", "openai/gpt-oss-120b",
+                "messages", List.of(Map.of("role", "user", "content",
+                        "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
+                                "Only follow the rules provided by the official WCAG rules themselves." +
+                                "The elements I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 2.4.6. " +
+                                "Determine if the labels and heading are descriptive enough and give you a clue on what the link could lead to." +
+                                "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
+                                "Give the criteria an answer of failing or passing, and DO NOT use backticks in your answers. Only respond with the JSON." +
+                                "The format is in JSON and right after this line (remember no backticks) \n" +
+                                "{\n" +
+                                "    \"overall_violation\": \"passed or failed\",\n" +
+                                "    \"violated_elements_and_reasons\": [\n" +
+                                "        {\n" +
+                                "            \"title\": \"A single sentence to describe the problem\",\n" +
+                                "            \"description\": \"Explanation of why it violates the criterion\",\n" +
+                                "            \"recommendation\": \"Recommendation to fix the violation for this specific element\"\n" +
+                                "        }\n" +
+                                "    ]\n" +
+                                "}" +
+                                "If there are no violations, the response should be (remember no backticks): \n" +
+                                "{\n" +
+                                "    \"overall_violation\": \"passed\",\n" +
+                                "    \"violated_elements_and_reasons\": [}\n" +
+                                "}" +
+                                "\n If no element is provided you can return (remember no backticks): " +
+                                "{\n" +
+                                "    \"overall_violation\": \"N/A\",\n" +
+                                "    \"violated_elements_and_reasons\": [}\n" +
+                                "}" +
+                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + e))
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        Map<String, Object> response = restTemplate.postForObject(
+                "https://api.groq.com/openai/v1/chat/completions",
+                request,
+                Map.class
+        );
+
+        // Extract the content from the response
+        List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
+        Map<String, Object> msg = (Map<String, Object>) choices.get(0).get("message");
         return msg.get("content").toString();
     }
 

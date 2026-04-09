@@ -75,6 +75,55 @@ public class JSoupService {
     }
 
     /**
+     * Checks criterion 2.4.2
+     */
+    public Elements getTitle(String url){
+        try {
+            Document webPage = Jsoup.connect(url).get();
+
+            Elements x = webPage.getElementsByTag("title");
+
+            return x;
+        } catch (IOException e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Checks criterion 2.4.4
+     */
+    public Elements getLinks(String url){
+        try {
+            Document webPage = Jsoup.connect(url).get();
+
+            Elements x = webPage.getElementsByTag("a");
+
+            System.out.println(x);
+
+            return x;
+        } catch (IOException e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Checks criterion 2.4.6
+     */
+    public Elements getLabelsHeading(String url){
+        try {
+            Document webPage = Jsoup.connect(url).get();
+
+            Elements x = webPage.select("h1, h2, h3, h4, h5, h6, label");
+
+            System.out.println(x);
+
+            return x;
+        } catch (IOException e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * Checks criterion 3.1.1
      */
     public boolean getLangElement(String url) {
