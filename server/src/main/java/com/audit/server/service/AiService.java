@@ -6,16 +6,19 @@ import com.audit.server.projection.SuccessCriteriaProjection;
 import com.audit.server.repo.AuditRepository;
 import com.audit.server.repo.SuccessCriteriaRepository;
 import org.jsoup.select.Elements;
+import org.springframework.ai.content.Media;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.client.RestTemplate;
 
+import java.awt.*;
+import java.beans.Encoder;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 
 @Service
@@ -39,6 +42,7 @@ public class AiService {
 
         this.criteriaHandlers = Map.of(
                 "1.1.1", url -> checkAltText(jSoupService.getAltText(url), url),
+                "1.3.5", url -> checkLabels(jSoupService.getLabelsAndInput(url)),
                 "3.1.1", url -> checkLanguage(jSoupService.getLangElement(url), url),
                 "3.1.2", url -> checkAllLanguage(jSoupService.getAllLangElements(url), url),
 //                "3.3.1", url -> checkErrorIdentification(jSoupService.getFormElements(url), url),
@@ -94,6 +98,30 @@ public class AiService {
 
         return handler.apply(url);
     }
+
+    public String generateResponseWithPicture(String criteriaId, String auditId, List<byte[]> image){
+        SuccessCriteriaProjection projection = criteriaRepo.findBySuccessCriteriaRefId(criteriaId);
+        Optional<Audit> audit = auditRepo.findById(auditId);
+
+        if (projection == null || projection.getSuccessCriteria().isEmpty()) {
+            throw new RuntimeException("No criteria found for refId: " + criteriaId);
+        }
+
+        if (audit.isEmpty()) {
+            throw new RuntimeException("No audit found for id: " + auditId);
+        }
+
+        if (Objects.equals(criteriaId, "1.3.2")){
+            return checkMeaningfulness(image);
+        }
+
+        if (Objects.equals(criteriaId, "1.3.4")){
+            return checkOrientation(image);
+        }
+
+        return "";
+    }
+
 
     /**
      * Used for rule 1.1.1
@@ -153,6 +181,219 @@ public class AiService {
         return msg.get("content").toString();
     }
 
+    /**
+     * Used for rule 1.3.2
+     * @param images List that contains one or more byte[] need to be analyzed
+     * @return String JSON format with the answer
+     */
+    public String checkMeaningfulness(List<byte[]> images) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+
+        List<Map<String, Object>> contentParts = new ArrayList<>();
+
+        contentParts.add(Map.of(
+                "type", "text",
+                "text", "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
+                        " Do not limit your findings to the violations mentioned in common failures or test rules; explore beyond these areas for potential issues." +
+                        "The image I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 1.3.2. " +
+                        "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
+                        "Give the criteria an answer of failing or passing, and don't use backticks in your answers. Only respond with the JSON." +
+                        "The format is in JSON and right after this line (remember no backticks) \n" +
+                        "{\n" +
+                        "    \"overall_violation\": \"passed or failed\",\n" +
+                        "    \"violated_elements_and_reasons\": [\n" +
+                        "        {\n" +
+                        "            \"title\": \"A single sentence to describe the problem\",\n" +
+                        "            \"description\": \"Explanation of why it violates the criterion\",\n" +
+                        "            \"recommendation\": \"Recommendation to fix theviolation for this specific element\"\n" +
+                        "        }\n" +
+                        "    ]\n" +
+                        "}" +
+                        "If there are no violations, the response should be (remember no backticks): \n" +
+                        "{\n" +
+                        "    \"overall_violation\": \"passed\",\n" +
+                        "    \"violated_elements_and_reasons\": [}\n" +
+                        "}" +
+                        "\n If no element is provided you can return (remember no backticks): " +
+                        "{\n" +
+                        "    \"overall_violation\": \"N/A\",\n" +
+                        "    \"violated_elements_and_reasons\": [}\n" +
+                        "}" +
+                        " Remember no backticks and only respond with the given format."
+        ));
+
+        for (byte[] imageBytes : images) {
+            String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+            String mimeType = detectMimeType(imageBytes);
+            String dataUrl = "data:" + mimeType + ";base64," + base64Image;
+
+            contentParts.add(Map.of(
+                    "type", "image_url",
+                    "image_url", Map.of("url", dataUrl)
+            ));
+        }
+
+        Map<String, Object> message = Map.of(
+                "role", "user",
+                "content", contentParts
+        );
+
+        Map<String, Object> body = Map.of(
+                "model", "meta-llama/llama-4-scout-17b-16e-instruct",
+                "messages", List.of(message)
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        Map<String, Object> response = restTemplate.postForObject(
+                "https://api.groq.com/openai/v1/chat/completions",
+                request,
+                Map.class
+        );
+
+        List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
+        Map<String, Object> msg = (Map<String, Object>) choices.get(0).get("message");
+
+        return msg.get("content").toString();
+    }
+
+    /**
+     * Used for rule 1.3.4
+     * @param images List that contains one or more byte[] need to be analyzed
+     * @return String JSON format with the answer
+     */
+    public String checkOrientation(List<byte[]> images) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+
+        List<Map<String, Object>> contentParts = new ArrayList<>();
+
+        contentParts.add(Map.of(
+                "type", "text",
+                "text", "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
+                        " Do not limit your findings to the violations mentioned in common failures or test rules; explore beyond these areas for potential issues." +
+                        "The two images I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 1.3.4. " +
+                        "One of them will be in landscape orientation, while the other one is in portrait orientation." +
+                        "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
+                        "Give the criteria an answer of failing or passing, and don't use backticks in your answers. Only respond with the JSON." +
+                        "The format is in JSON and right after this line (remember no backticks) \n" +
+                        "{\n" +
+                        "    \"overall_violation\": \"passed or failed\",\n" +
+                        "    \"violated_elements_and_reasons\": [\n" +
+                        "        {\n" +
+                        "            \"title\": \"A single sentence to describe the problem\",\n" +
+                        "            \"description\": \"Explanation of why it violates the criterion\",\n" +
+                        "            \"recommendation\": \"Recommendation to fix theviolation for this specific element\"\n" +
+                        "        }\n" +
+                        "    ]\n" +
+                        "}" +
+                        "If there are no violations, the response should be (remember no backticks): \n" +
+                        "{\n" +
+                        "    \"overall_violation\": \"passed\",\n" +
+                        "    \"violated_elements_and_reasons\": [}\n" +
+                        "}" +
+                        "\n If nothing is provided, or you can't read the urls, you can return (remember no backticks): " +
+                        "{\n" +
+                        "    \"overall_violation\": \"N/A\",\n" +
+                        "    \"violated_elements_and_reasons\": [}\n" +
+                        "}" +
+                        " Remember no backticks and only respond with the given format."
+        ));
+        
+        for (byte[] imageBytes : images) {
+            String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+            String mimeType = detectMimeType(imageBytes);
+            String dataUrl = "data:" + mimeType + ";base64," + base64Image;
+
+            contentParts.add(Map.of(
+                    "type", "image_url",
+                    "image_url", Map.of("url", dataUrl)
+            ));
+        }
+
+        Map<String, Object> message = Map.of(
+                "role", "user",
+                "content", contentParts
+        );
+
+        Map<String, Object> body = Map.of(
+                "model", "meta-llama/llama-4-scout-17b-16e-instruct",
+                "messages", List.of(message)
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        Map<String, Object> response = restTemplate.postForObject(
+                "https://api.groq.com/openai/v1/chat/completions",
+                request,
+                Map.class
+        );
+
+        List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
+        Map<String, Object> msg = (Map<String, Object>) choices.get(0).get("message");
+
+        return msg.get("content").toString();
+    }
+
+    /**
+     * Use for rule 1.3.5
+     * @param e String that need to be analyzed
+     * @return String JSON format with the answer
+     */
+    public String checkLabels(String e){
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+
+        Map<String, Object> body = Map.of(
+                "model", "openai/gpt-oss-120b",
+                "messages", List.of(Map.of("role", "user", "content",
+                        "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
+                                "Only follow the rules provided by the official WCAG rules themselves." +
+                                "The elements I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 1.3.5. " +
+                                "Labels and input tags will be shared with you, and it is your job to make sure inputs have a corresponding label." +
+                                "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
+                                "Give the criteria an answer of failing or passing, and DO NOT use backticks in your answers. Only respond with the JSON." +
+                                "The format is in JSON and right after this line (remember no backticks) \n" +
+                                "{\n" +
+                                "    \"overall_violation\": \"passed or failed\",\n" +
+                                "    \"violated_elements_and_reasons\": [\n" +
+                                "        {\n" +
+                                "            \"title\": \"A single sentence to describe the problem\",\n" +
+                                "            \"description\": \"Explanation of why it violates the criterion\",\n" +
+                                "            \"recommendation\": \"Recommendation to fix the violation for this specific element\"\n" +
+                                "        }\n" +
+                                "    ]\n" +
+                                "}" +
+                                "If there are no violations, the response should be (remember no backticks): \n" +
+                                "{\n" +
+                                "    \"overall_violation\": \"passed\",\n" +
+                                "    \"violated_elements_and_reasons\": [}\n" +
+                                "}" +
+                                "\n If no element is provided you can return (remember no backticks): " +
+                                "{\n" +
+                                "    \"overall_violation\": \"N/A\",\n" +
+                                "    \"violated_elements_and_reasons\": [}\n" +
+                                "}" +
+                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + e))
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        Map<String, Object> response = restTemplate.postForObject(
+                "https://api.groq.com/openai/v1/chat/completions",
+                request,
+                Map.class
+        );
+
+        // Extract the content from the response
+        List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
+        Map<String, Object> msg = (Map<String, Object>) choices.get(0).get("message");
+        return msg.get("content").toString();
+    }
 
     /**
      * Used for rule 3.1.1
@@ -439,4 +680,23 @@ public class AiService {
         return msg.get("content").toString();
     }
 
+    private String detectMimeType(byte[] bytes) {
+        if (bytes.length >= 3
+                && bytes[0] == (byte) 0xFF
+                && bytes[1] == (byte) 0xD8
+                && bytes[2] == (byte) 0xFF) {
+            return "image/jpeg";
+        } else if (bytes.length >= 8
+                && bytes[0] == (byte) 0x89
+                && bytes[1] == 0x50 // 'P'
+                && bytes[2] == 0x4E // 'N'
+                && bytes[3] == 0x47) { // 'G'
+            return "image/png";
+        } else if (bytes[0] == 'G' && bytes[1] == 'I' && bytes[2] == 'F') {
+            return "image/gif";
+        } else if (bytes[0] == 'R' && bytes[1] == 'I' && bytes[2] == 'F' && bytes[3] == 'F') {
+            return "image/webp";
+        }
+        return "image/jpeg"; // fallback
+    }
 }

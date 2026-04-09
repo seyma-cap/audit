@@ -44,8 +44,23 @@ public class JSoupService {
     }
 
     /**
-     *  Checks criterium 1.3.1
+     *  Checks criterium 1.3.5
      */
+    public String getLabelsAndInput(String url){
+        try {
+            Document webPage = Jsoup.connect(url).get();
+
+            // extracts every element with <img> tag
+            Elements x = webPage.getElementsByTag("label");
+            Elements y = webPage.getElementsByTag("input");
+
+            System.out.println();
+
+            return x.toString() + y.toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 
     /**

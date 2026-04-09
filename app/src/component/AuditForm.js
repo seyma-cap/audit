@@ -1,5 +1,6 @@
 import "../style/form.css";
 import {useEffect, useState} from "react";
+import { FormEvent, ChangeEventHandler } from "react";
 import api from "../axiosConfig";
 
 function AuditForm({children, object, open, close}) {
@@ -14,6 +15,8 @@ function AuditForm({children, object, open, close}) {
     const [description, setDescription] = useState("");
     const [recommendation, setRecommendation] = useState("");
     const [comment, setComment] = useState("");
+
+    const [imageFile, setImageFile] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -61,6 +64,30 @@ function AuditForm({children, object, open, close}) {
             setActiveCriteria(criteria[index - 1]);
         } else {
             close();
+        }
+    }
+
+    async function handleChange(e) {
+        const formData = new FormData();
+
+        for (let i = 0; i < e.target.files.length ; i++) {
+            formData.append("image", e.target.files[i]);
+        }
+
+        try {
+            const res = await api.post(
+                `/criteria/ai_picture?criteriaId=${activeCriteria.refId}&auditId=${object}`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data"
+                    },
+                }
+            );
+            setScore(res.data.overall_violation);
+            setAnswers(res.data.violated_elements_and_reasons);
+        } catch (err) {
+            console.log(err);
         }
     }
 
@@ -125,6 +152,7 @@ function AuditForm({children, object, open, close}) {
                                     <option defaultChecked="choose"></option>
                                     <option>{score}</option>
                                 </select>
+                                <input type="file" multiple onChange={handleChange} accept="image/*"/>
                                 {answers.map((a) => (
                                     <div className="style-form">
                                         <div className="titleForm">
