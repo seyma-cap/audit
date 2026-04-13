@@ -34,23 +34,36 @@ public class AiService {
     private final JSoupService jSoupService;
 
     private final Map<String, Function<String, String>> criteriaHandlers;
+    private final Map<String, Function<List<byte[]>, String>> imageHandlers;
 
     public AiService(SuccessCriteriaRepository criteriaRepo, AuditRepository auditRepo, JSoupService jSoupService) {
         this.criteriaRepo = criteriaRepo;
         this.auditRepo = auditRepo;
         this.jSoupService = jSoupService;
 
-        this.criteriaHandlers = Map.of(
-                "1.1.1", url -> checkAltText(jSoupService.getAltText(url), url),
-                "1.3.5", url -> checkLabels(jSoupService.getLabelsAndInput(url)),
-                "1.4.2", url -> checkAudio(jSoupService.getAudioElements(url)),
-                "2.4.2", url -> checkPageTitle(jSoupService.getTitle(url)),
-                "2.4.4", url -> checkLinkPurpose(jSoupService.getLinks(url)),
-                "2.4.6", url -> checkLabelHeadings(jSoupService.getLabelsHeading(url)),
-                "3.1.1", url -> checkLanguage(jSoupService.getLangElement(url), url),
-                "3.1.2", url -> checkAllLanguage(jSoupService.getAllLangElements(url), url),
-                "3.3.2", url -> checkFormInstructions(jSoupService.getFormElements(url), url),
-                "4.1.2", url -> checkRole(jSoupService.getCustomElements(url), url)
+        this.criteriaHandlers = Map.ofEntries(
+                Map.entry("1.1.1", url -> checkAltText(jSoupService.getAltText(url), url)),
+                Map.entry("1.3.5", url -> checkLabels(jSoupService.getLabelsAndInput(url))),
+                Map.entry("1.4.2", url -> checkAudio(jSoupService.getAudioElements(url))),
+                Map.entry("2.4.2", url -> checkPageTitle(jSoupService.getTitle(url))),
+                Map.entry("2.4.4", url -> checkLinkPurpose(jSoupService.getLinks(url))),
+                Map.entry("2.4.6", url -> checkLabelHeadings(jSoupService.getLabelsHeading(url))),
+                Map.entry("2.5.3", url -> checkLabelNames(jSoupService.getLabels(url))),
+                Map.entry("3.1.1", url -> checkLanguage(jSoupService.getLangElement(url), url)),
+                Map.entry("3.1.2", url -> checkAllLanguage(jSoupService.getAllLangElements(url), url)),
+                Map.entry("3.3.2", url -> checkFormInstructions(jSoupService.getFormElements(url), url)),
+                Map.entry("4.1.2", url -> checkRole(jSoupService.getCustomElements(url), url))
+        );
+
+        this.imageHandlers = Map.of(
+                "1.3.2",  this::checkMeaningfulness,
+                "1.3.4",  this::checkOrientation,
+                "1.4.1",  this::checkUseOfColor,
+                "1.4.3",  this::checkContrast,
+                "1.4.4",  this::checkResize,
+                "1.4.5",  this::checkImageText,
+                "1.4.10", this::checkReflow,
+                "1.4.12", this::checkSpacing
         );
     }
 
@@ -95,10 +108,6 @@ public class AiService {
 
         Function<String, String> handler = criteriaHandlers.get(criteria.getRefId());
 
-        if (Objects.equals(criteriaId, "2.5.3")){
-            return checkLabelNames(jSoupService.getLabels(url));
-        }
-
         if (handler == null) {
             throw new UnsupportedOperationException("No handler for criteria: " + criteria.getRefId());
         }
@@ -106,7 +115,7 @@ public class AiService {
         return handler.apply(url);
     }
 
-    public String generateResponseWithPicture(String criteriaId, String auditId, List<byte[]> image){
+    public String generateResponseWithPicture(String criteriaId, String auditId, List<byte[]> image) {
         SuccessCriteriaProjection projection = criteriaRepo.findBySuccessCriteriaRefId(criteriaId);
         Optional<Audit> audit = auditRepo.findById(auditId);
 
@@ -118,39 +127,13 @@ public class AiService {
             throw new RuntimeException("No audit found for id: " + auditId);
         }
 
-        if (Objects.equals(criteriaId, "1.3.2")){
-            return checkMeaningfulness(image);
+        Function<List<byte[]>, String> handler = imageHandlers.get(criteriaId);
+
+        if (handler == null) {
+            throw new UnsupportedOperationException("No handler for criteria: " + criteriaId);
         }
 
-        if (Objects.equals(criteriaId, "1.3.4")){
-            return checkOrientation(image);
-        }
-
-        if (Objects.equals(criteriaId, "1.4.1")){
-            return checkUseOfColor(image);
-        }
-
-        if (Objects.equals(criteriaId, "1.4.3")){
-            return checkContrast(image);
-        }
-
-        if (Objects.equals(criteriaId, "1.4.4")){
-            return checkResize(image);
-        }
-
-        if (Objects.equals(criteriaId, "1.4.5")){
-            return checkImageText(image);
-        }
-
-        if (Objects.equals(criteriaId, "1.4.10")){
-            return checkReflow(image);
-        }
-
-        if (Objects.equals(criteriaId, "1.4.12")){
-            return checkSpacing(image);
-        }
-
-        return "";
+        return handler.apply(image);
     }
 
 
