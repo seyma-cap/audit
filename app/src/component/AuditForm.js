@@ -1,6 +1,5 @@
 import "../style/form.css";
 import {useEffect, useState} from "react";
-import { FormEvent, ChangeEventHandler } from "react";
 import api from "../axiosConfig";
 
 function AuditForm({children, object, open, close}) {
@@ -11,12 +10,12 @@ function AuditForm({children, object, open, close}) {
     const [score, setScore] = useState(null);
 
     const [answers, setAnswers] = useState([]);
-    const [title, setTitle] = useState("");
-    const [description, setDescription] = useState("");
-    const [recommendation, setRecommendation] = useState("");
-    const [comment, setComment] = useState("");
 
-    const [imageFile, setImageFile] = useState(null);
+    function updateAnswer(index, field, value) {
+        setAnswers(prev => prev.map((a, i) =>
+            i === index ? { ...a, [field]: value } : a
+        ));
+    }
 
     useEffect(() => {
         const fetchData = async () => {
@@ -93,10 +92,7 @@ function AuditForm({children, object, open, close}) {
 
     async function saveAnswer() {
         console.log(activeCriteria.refId)
-        console.log(title)
-        console.log(description)
-        console.log(recommendation)
-        console.log(comment)
+        console.log(answers)
     }
 
     return (
@@ -153,45 +149,41 @@ function AuditForm({children, object, open, close}) {
                                     <option>{score}</option>
                                 </select>
                                 <input type="file" multiple onChange={handleChange} accept="image/*"/>
-                                {answers.map((a) => (
-                                    <div className="style-form">
+                                {answers.map((a, index) => (
+                                    <div className="style-form" key={index}>
                                         <div className="titleForm">
                                             <label htmlFor="answerTitle">Title</label>
                                             <input
                                                 id="answerTitle"
-                                                name="answerTitle"
                                                 type="text"
                                                 value={a.title}
-                                                onChange={e => setTitle(e.target.value)}/>
+                                                onChange={e => updateAnswer(index, "title", e.target.value)} />
                                         </div>
                                         <div>
                                             <div className="titleForm">
                                                 <label htmlFor="answerDesc">Description</label>
                                                 <textarea
                                                     id="answerDesc"
-                                                    name="answerDesc"
                                                     rows="5"
                                                     value={a.description}
-                                                    onChange={e => setDescription(e.target.value)}/>
+                                                    onChange={e => updateAnswer(index, "description", e.target.value)} />
                                             </div>
                                             <div className="titleForm">
                                                 <label htmlFor="answerRec">Recommendation</label>
                                                 <textarea
                                                     id="answerRec"
-                                                    name="answerRec"
                                                     rows="5"
                                                     value={a.recommendation}
-                                                    onChange={e => setRecommendation(e.target.value)}/>
+                                                    onChange={e => updateAnswer(index, "recommendation", e.target.value)} />
                                             </div>
                                         </div>
                                         <div className="titleForm">
                                             <label htmlFor="answerCom">Comments</label>
                                             <textarea
                                                 id="answerCom"
-                                                name="answerCom"
                                                 rows="5"
                                                 value={a.comment}
-                                                onChange={e => setComment(e.target.value)}/>
+                                                onChange={e => updateAnswer(index, "comment", e.target.value)} />
                                         </div>
                                     </div>
                                 ))}
