@@ -3,8 +3,11 @@ import {useEffect, useState} from "react";
 import AuditForm from "../component/AuditForm";
 import api from "../axiosConfig"
 import validator from "validator/es";
+import { useParams, useNavigate } from "react-router-dom";
 
 function Audit() {
+    const { mainObjectId, guideRefId } = useParams();
+    const navigate = useNavigate();
 
     const [guides, setGuides] = useState([]);
     const [activeGuide, setActiveGuide] = useState(null);
@@ -12,7 +15,6 @@ function Audit() {
     const [auditUrl, setAuditUrl] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
 
-    const [isActive, setIsActive] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
     const [urlSend, setUrlSend] = useState(false);
 
@@ -21,23 +23,32 @@ function Audit() {
         (async () => {
             try {
                 const res = await api.get("/guidelines/titles");
-                const sorted = res.data.sort((a, b) => {
-                    return a.refId.localeCompare(b.refId, undefined, { numeric: true });
-                });
-
+                const sorted = res.data.sort((a, b) =>
+                    a.refId.localeCompare(b.refId, undefined, { numeric: true })
+                );
                 setGuides(sorted);
                 setIsLoaded(true);
+
+                if (guideRefId) {
+                    const found = sorted.find(g => g.refId === guideRefId);
+                    if (found) setActiveGuide(found);
+                }
             } catch (err) {
                 console.error(err);
             }
         })();
-    }, []);
+    }, [guideRefId]);
 
     function openForm(guide){
-        setIsActive(true);
         setActiveGuide(guide);
+        navigate(`/audit/${mainObjectId}/${guide.refId}`);
     }
-    
+
+    function closeForm(){
+        setActiveGuide(null);
+        navigate(`/audit/${mainObjectId}`);
+    }
+
     const handleChange = (e) => {
         setAuditUrl(e.target.value);
     }
@@ -46,27 +57,25 @@ function Audit() {
         if (!validator.isURL(auditUrl)){
             setErrorMessage("URL is not valid")
             return;
-        } else {
-            setErrorMessage("");
         }
+        setErrorMessage("");
 
         const res = await api.post("/audit/saveUrl",
             {
                 url: auditUrl
             });
         const id = res.data.id;
-        setMainObject(id);
 
-        // check status
-        if (res.status === 200){
+        if (res.status === 200) {
             setUrlSend(true);
+            navigate(`/audit/${id}`);
         }
     }
 
     return (
     <div className="container">
       <div className="box">
-          <div hidden={isActive}>
+          <div hidden={activeGuide}>
               <div hidden={!isLoaded}>
                   <div>
                       <div className="header-title">
@@ -100,12 +109,12 @@ function Audit() {
               </div>
           </div>
 
-          {isActive && (
+          {isLoaded && activeGuide && (
               <AuditForm
-                  open={isActive}
+                  open={true}
                   children={activeGuide}
-                  object={mainObject}
-                  close={() => setIsActive(false)}
+                  object={mainObjectId}
+                  close={closeForm}
               />
           )}
 
