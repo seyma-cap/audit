@@ -63,17 +63,17 @@ public class AiService {
         this.jSoupService = jSoupService;
 
         this.criteriaHandlers = Map.ofEntries(
-                Map.entry("1.1.1", url -> checkAltText(jSoupService.getAltText(url), url)),
+                Map.entry("1.1.1", url -> checkAltText(jSoupService.getAltText(url))),
                 Map.entry("1.3.5", url -> checkLabels(jSoupService.getLabelsAndInput(url))),
                 Map.entry("1.4.2", url -> checkAudio(jSoupService.getAudioElements(url))),
                 Map.entry("2.4.2", url -> checkPageTitle(jSoupService.getTitle(url))),
                 Map.entry("2.4.4", url -> checkLinkPurpose(jSoupService.getLinks(url))),
                 Map.entry("2.4.6", url -> checkLabelHeadings(jSoupService.getLabelsHeading(url))),
                 Map.entry("2.5.3", url -> checkLabelNames(jSoupService.getLabels(url))),
-                Map.entry("3.1.1", url -> checkLanguage(jSoupService.getLangElement(url), url)),
-                Map.entry("3.1.2", url -> checkAllLanguage(jSoupService.getAllLangElements(url), url)),
-                Map.entry("3.3.2", url -> checkFormInstructions(jSoupService.getFormElements(url), url)),
-                Map.entry("4.1.2", url -> checkRole(jSoupService.getCustomElements(url), url))
+                Map.entry("3.1.1", url -> checkLanguage(jSoupService.getLangElement(url))),
+                Map.entry("3.1.2", url -> checkAllLanguage(jSoupService.getAllLangElements(url))),
+                Map.entry("3.3.2", url -> checkFormInstructions(jSoupService.getFormElements(url))),
+                Map.entry("4.1.2", url -> checkRole(jSoupService.getCustomElements(url)))
         );
 
         this.imageHandlers = Map.of(
@@ -163,7 +163,7 @@ public class AiService {
      * @param e Elements that need to be analyzed
      * @return String JSON format with the answer
      */
-    public String checkAltText(Elements e, String url){
+    public String checkAltText(Elements e){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
@@ -868,7 +868,7 @@ public class AiService {
      * @param e boolean whether the tag is present
      * @return String JSON format with the answer
      */
-    public String checkLanguage(boolean e, String url){
+    public String checkLanguage(boolean e){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
@@ -904,7 +904,7 @@ public class AiService {
      * @param s String that need to be analyzed
      * @return String JSON format with the answer
      */
-    public String checkAllLanguage(String s, String url){
+    public String checkAllLanguage(String s){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
@@ -939,7 +939,7 @@ public class AiService {
      * @param e Elements that need to be analyzed
      * @return String JSON format with the answer
      */
-    public String checkFormInstructions(Elements e, String url){
+    public String checkFormInstructions(Elements e){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
@@ -975,7 +975,7 @@ public class AiService {
      * @param s String that needs to be analyzed
      * @return String JSON format with the answer
      */
-    public String checkRole(String s, String url){
+    public String checkRole(String s){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
