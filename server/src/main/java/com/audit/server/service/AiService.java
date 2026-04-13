@@ -6,17 +6,14 @@ import com.audit.server.projection.SuccessCriteriaProjection;
 import com.audit.server.repo.AuditRepository;
 import com.audit.server.repo.SuccessCriteriaRepository;
 import org.jsoup.select.Elements;
-import org.springframework.ai.content.Media;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.awt.*;
-import java.beans.Encoder;
 import java.util.*;
 import java.util.List;
 import java.util.function.Function;
@@ -35,6 +32,30 @@ public class AiService {
 
     private final Map<String, Function<String, String>> criteriaHandlers;
     private final Map<String, Function<List<byte[]>, String>> imageHandlers;
+
+    private final String formatMessage = "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
+            "Give the criteria an answer of failing or passing. Don't use backticks in your answer, only respond with the JSON." +
+            "The format is in JSON and right after this line \n" +
+            "{\n" +
+            "    \"overall_violation\": \"passed or failed\",\n" +
+            "    \"violated_elements_and_reasons\": [\n" +
+            "        {\n" +
+            "            \"title\": \"A single sentence to describe the problem\",\n" +
+            "            \"description\": \"Explanation of why it violates the criterion\",\n" +
+            "            \"recommendation\": \"Recommendation to fix the violation for this specific element\"\n" +
+            "        }\n" +
+            "    ]\n" +
+            "}" +
+            "If there are no violations, the response should be: \n" +
+            "{\n" +
+            "    \"overall_violation\": \"passed\",\n" +
+            "    \"violated_elements_and_reasons\": [}\n" +
+            "}" +
+            "\n If no element is provided you can return (elements can not be forgotten): " +
+            "{\n" +
+            "    \"overall_violation\": \"N/A\",\n" +
+            "    \"violated_elements_and_reasons\": [}\n" +
+            "}\n";
 
     public AiService(SuccessCriteriaRepository criteriaRepo, AuditRepository auditRepo, JSoupService jSoupService) {
         this.criteriaRepo = criteriaRepo;
@@ -151,34 +172,11 @@ public class AiService {
                 "model", "openai/gpt-oss-120b",
                 "messages", List.of(Map.of("role", "user", "content",
                         "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
-                                " Do not limit your findings to the violations mentioned in common failures or test rules; explore beyond these areas for potential issues." +
-                        "The elements I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 1.1.1. " +
-                                "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                                "Give the criteria an answer of failing or passing, and don't use backticks in your answers. Only respond with the JSON." +
-                                "The format is in JSON and right after this line (remember no backticks) \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed or failed\",\n" +
-                                "    \"violated_elements_and_reasons\": [\n" +
-                                "        {\n" +
-                                "            \"title\": \"A single sentence to describe the problem\",\n" +
-                                "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                                "            \"recommendation\": \"Recommendation to fix theviolation for this specific element\"\n" +
-                                "        }\n" +
-                                "    ]\n" +
-                                "}" +
-                                "If there are no violations, the response should be (remember no backticks): \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                        "Here are the elements that need to be examined: " + e +
-                        "\n If no element is provided you can return (remember no backticks): " +
-                                "{\n" +
-                                "    \"overall_violation\": \"N/A\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                " And finally the URL of the website: " + url +
-                        " Remember no backticks and only respond with the given format."))
+                                "Do not limit your findings to the violations mentioned in common failures or test rules; explore beyond these areas for potential issues." +
+                        "The elements I am going to share needs to be checked based on criteria 1.1.1., mentioned in the WCAG 2.2 rules." +
+                                "Check to see if any images found are accompanied with an alt text. Alos check if this alt text, in general, is descriptive enough. " +
+                                formatMessage +
+                                "Here are the elements that need to be examined: " + e))
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
@@ -210,32 +208,10 @@ public class AiService {
         contentParts.add(Map.of(
                 "type", "text",
                 "text", "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
-                        " Do not limit your findings to the violations mentioned in common failures or test rules; explore beyond these areas for potential issues." +
-                        "The image I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 1.3.2. " +
-                        "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                        "Give the criteria an answer of failing or passing, and don't use backticks in your answers. Only respond with the JSON." +
-                        "The format is in JSON and right after this line (remember no backticks) \n" +
-                        "{\n" +
-                        "    \"overall_violation\": \"passed or failed\",\n" +
-                        "    \"violated_elements_and_reasons\": [\n" +
-                        "        {\n" +
-                        "            \"title\": \"A single sentence to describe the problem\",\n" +
-                        "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                        "            \"recommendation\": \"Recommendation to fix theviolation for this specific element\"\n" +
-                        "        }\n" +
-                        "    ]\n" +
-                        "}" +
-                        "If there are no violations, the response should be (remember no backticks): \n" +
-                        "{\n" +
-                        "    \"overall_violation\": \"passed\",\n" +
-                        "    \"violated_elements_and_reasons\": [}\n" +
-                        "}" +
-                        "\n If no element is provided you can return (remember no backticks): " +
-                        "{\n" +
-                        "    \"overall_violation\": \"N/A\",\n" +
-                        "    \"violated_elements_and_reasons\": [}\n" +
-                        "}" +
-                        " Remember no backticks and only respond with the given format."
+                        "Do not limit your findings to the violations mentioned in common failures or test rules; explore beyond these areas for potential issues." +
+                        "The image I am going to share needs to be checked based on criteria 1.3.2, mentioned in the WCAG 2.2 rules. " +
+                        formatMessage +
+                        "Remember no backticks and only respond with the given format."
         ));
 
         for (byte[] imageBytes : images) {
@@ -289,32 +265,10 @@ public class AiService {
                 "type", "text",
                 "text", "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                         " Do not limit your findings to the violations mentioned in common failures or test rules; explore beyond these areas for potential issues." +
-                        "The two images I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 1.3.4. " +
+                        "The two images I am going to share needs to be checked based on criteria 1.3.4, mentioned in the WCAG 2.2 rules. " +
                         "One of them will be in landscape orientation, while the other one is in portrait orientation." +
-                        "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                        "Give the criteria an answer of failing or passing, and don't use backticks in your answers. Only respond with the JSON." +
-                        "The format is in JSON and right after this line (remember no backticks) \n" +
-                        "{\n" +
-                        "    \"overall_violation\": \"passed or failed\",\n" +
-                        "    \"violated_elements_and_reasons\": [\n" +
-                        "        {\n" +
-                        "            \"title\": \"A single sentence to describe the problem\",\n" +
-                        "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                        "            \"recommendation\": \"Recommendation to fix theviolation for this specific element\"\n" +
-                        "        }\n" +
-                        "    ]\n" +
-                        "}" +
-                        "If there are no violations, the response should be (remember no backticks): \n" +
-                        "{\n" +
-                        "    \"overall_violation\": \"passed\",\n" +
-                        "    \"violated_elements_and_reasons\": [}\n" +
-                        "}" +
-                        "\n If nothing is provided, or you can't read the urls, you can return (remember no backticks): " +
-                        "{\n" +
-                        "    \"overall_violation\": \"N/A\",\n" +
-                        "    \"violated_elements_and_reasons\": [}\n" +
-                        "}" +
-                        " Remember no backticks and only respond with the given format."
+                        formatMessage +
+                        "Remember no backticks and only respond with the given format."
         ));
 
         for (byte[] imageBytes : images) {
@@ -367,32 +321,10 @@ public class AiService {
                 "messages", List.of(Map.of("role", "user", "content",
                         "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                                 "Only follow the rules provided by the official WCAG rules themselves." +
-                                "The elements I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 1.3.5. " +
-                                "Labels and input tags will be shared with you, and it is your job to make sure inputs have a corresponding label." +
-                                "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                                "Give the criteria an answer of failing or passing, and DO NOT use backticks in your answers. Only respond with the JSON." +
-                                "The format is in JSON and right after this line (remember no backticks) \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed or failed\",\n" +
-                                "    \"violated_elements_and_reasons\": [\n" +
-                                "        {\n" +
-                                "            \"title\": \"A single sentence to describe the problem\",\n" +
-                                "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                                "            \"recommendation\": \"Recommendation to fix the violation for this specific element\"\n" +
-                                "        }\n" +
-                                "    ]\n" +
-                                "}" +
-                                "If there are no violations, the response should be (remember no backticks): \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "\n If no element is provided you can return (remember no backticks): " +
-                                "{\n" +
-                                "    \"overall_violation\": \"N/A\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + e))
+                                "The elements I am going to share needs to be checked based on criteria 1.3.5, mentioned in the WCAG 2.2 rules. " +
+                                "Labels and input tags will be shared, and it is your job to make sure inputs have a corresponding label." +
+                                formatMessage +
+                                "Here are the elements that need to be examined: " + e))
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
@@ -424,33 +356,11 @@ public class AiService {
         contentParts.add(Map.of(
                 "type", "text",
                 "text", "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
-                        " Do not limit your findings to the violations mentioned in common failures or test rules; explore beyond these areas for potential issues." +
-                        "The image/images I am going to share need to be checked based on the criteria in the WCAG 2.2 rules, criteria 1.4.1. " +
+                        "Do not limit your findings to the violations mentioned in common failures or test rules; explore beyond these areas for potential issues." +
+                        "The image/images I am going to share need to be checked based on criteria 1.4.1, mentioned in the WCAG 2.2 rules. " +
                         "They will contain screenshots of a web application, it is up for you to analyse them and determine if color is not used as the " +
                         "only visual means of conveying information." +
-                        "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                        "Give the criteria an answer of failing or passing, and don't use backticks in your answers. Only respond with the JSON." +
-                        "The format is in JSON and right after this line (remember no backticks) \n" +
-                        "{\n" +
-                        "    \"overall_violation\": \"passed or failed\",\n" +
-                        "    \"violated_elements_and_reasons\": [\n" +
-                        "        {\n" +
-                        "            \"title\": \"A single sentence to describe the problem\",\n" +
-                        "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                        "            \"recommendation\": \"Recommendation to fix theviolation for this specific element\"\n" +
-                        "        }\n" +
-                        "    ]\n" +
-                        "}" +
-                        "If there are no violations, the response should be (remember no backticks): \n" +
-                        "{\n" +
-                        "    \"overall_violation\": \"passed\",\n" +
-                        "    \"violated_elements_and_reasons\": [}\n" +
-                        "}" +
-                        "\n If nothing is provided, or you can't read the urls, you can return (remember no backticks): " +
-                        "{\n" +
-                        "    \"overall_violation\": \"N/A\",\n" +
-                        "    \"violated_elements_and_reasons\": [}\n" +
-                        "}" +
+                        formatMessage +
                         " Remember no backticks and only respond with the given format."
         ));
 
@@ -504,32 +414,10 @@ public class AiService {
                 "messages", List.of(Map.of("role", "user", "content",
                         "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                                 "Only follow the rules provided by the official WCAG rules themselves." +
-                                "The elements I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 1.4.2. " +
-                                "Audio tags will be shared with you, and you have to determine if these pass the criteria mention in 1.4.2" +
-                                "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                                "Give the criteria an answer of failing or passing, and DO NOT use backticks in your answers. Only respond with the JSON." +
-                                "The format is in JSON and right after this line (remember no backticks) \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed or failed\",\n" +
-                                "    \"violated_elements_and_reasons\": [\n" +
-                                "        {\n" +
-                                "            \"title\": \"A single sentence to describe the problem\",\n" +
-                                "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                                "            \"recommendation\": \"Recommendation to fix the violation for this specific element\"\n" +
-                                "        }\n" +
-                                "    ]\n" +
-                                "}" +
-                                "If there are no violations, the response should be (remember no backticks): \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "\n If no element is provided you can return (remember no backticks): " +
-                                "{\n" +
-                                "    \"overall_violation\": \"N/A\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + e))
+                                "The elements I am going to share needs to be checked based on criteria 1.4.2, mentioned in the WCAG 2.2 rules. " +
+                                "Audio tags will be shared, and you have to determine if they pass the criteria mention in 1.4.2" +
+                                formatMessage +
+                                "Here are the elements that need to be examined: " + e))
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
@@ -562,32 +450,10 @@ public class AiService {
                 "type", "text",
                 "text", "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                         " Do not limit your findings to the violations mentioned in common failures or test rules; explore beyond these areas for potential issues." +
-                        "The image/images I am going to share need to be checked based on the criteria in the WCAG 2.2 rules, criteria 1.4.3. " +
+                        "The image/images I am going to share need to be checked based on criteria 1.4.3, mentioned in the WCAG 2.2 rules. " +
                         "They will contain screenshots of a web application, it is up for you to analyse them and determine if the contrast of text and images of text is " +
                         "according to the criteria mentioned in WCAG 1.4.3." +
-                        "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                        "Give the criteria an answer of failing or passing, and don't use backticks in your answers. Only respond with the JSON." +
-                        "The format is in JSON and right after this line (remember no backticks) \n" +
-                        "{\n" +
-                        "    \"overall_violation\": \"passed or failed\",\n" +
-                        "    \"violated_elements_and_reasons\": [\n" +
-                        "        {\n" +
-                        "            \"title\": \"A single sentence to describe the problem\",\n" +
-                        "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                        "            \"recommendation\": \"Recommendation to fix theviolation for this specific element\"\n" +
-                        "        }\n" +
-                        "    ]\n" +
-                        "}" +
-                        "If there are no violations, the response should be (remember no backticks): \n" +
-                        "{\n" +
-                        "    \"overall_violation\": \"passed\",\n" +
-                        "    \"violated_elements_and_reasons\": [}\n" +
-                        "}" +
-                        "\n If nothing is provided, or you can't read the urls, you can return (remember no backticks): " +
-                        "{\n" +
-                        "    \"overall_violation\": \"N/A\",\n" +
-                        "    \"violated_elements_and_reasons\": [}\n" +
-                        "}" +
+                        formatMessage +
                         " Remember no backticks and only respond with the given format."
         ));
 
@@ -642,32 +508,10 @@ public class AiService {
                 "type", "text",
                 "text", "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                         " Do not limit your findings to the violations mentioned in common failures or test rules; explore beyond these areas for potential issues." +
-                        "The images I am going to share need to be checked based on the criteria in the WCAG 2.2 rules, criteria 1.4.4. " +
+                        "The images I am going to share need to be checked based on criteria 1.4.4, mentioned in the WCAG 2.2 rules. " +
                         "They will contain screenshots of a web application, one that is in its regular size, and one zoomed in 200% " +
                         "Analyze these according to the criteria mentioned in WCAG 1.4.4." +
-                        "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                        "Give the criteria an answer of failing or passing, and don't use backticks in your answers. Only respond with the JSON." +
-                        "The format is in JSON and right after this line (remember no backticks) \n" +
-                        "{\n" +
-                        "    \"overall_violation\": \"passed or failed\",\n" +
-                        "    \"violated_elements_and_reasons\": [\n" +
-                        "        {\n" +
-                        "            \"title\": \"A single sentence to describe the problem\",\n" +
-                        "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                        "            \"recommendation\": \"Recommendation to fix theviolation for this specific element\"\n" +
-                        "        }\n" +
-                        "    ]\n" +
-                        "}" +
-                        "If there are no violations, the response should be (remember no backticks): \n" +
-                        "{\n" +
-                        "    \"overall_violation\": \"passed\",\n" +
-                        "    \"violated_elements_and_reasons\": [}\n" +
-                        "}" +
-                        "\n If nothing is provided, or you can't read the urls, you can return (remember no backticks): " +
-                        "{\n" +
-                        "    \"overall_violation\": \"N/A\",\n" +
-                        "    \"violated_elements_and_reasons\": [}\n" +
-                        "}" +
+                        formatMessage +
                         " Remember no backticks and only respond with the given format."
         ));
 
@@ -722,31 +566,9 @@ public class AiService {
                 "type", "text",
                 "text", "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                         " Do not limit your findings to the violations mentioned in common failures or test rules; explore beyond these areas for potential issues." +
-                        "The images I am going to share need to be checked based on the criteria in the WCAG 2.2 rules, criteria 1.4.5. Focus on this criterion only, " +
+                        "The images I am going to share need to be checked based on criteria 1.4.5, mentioned in the WCAG 2.2 rules. Focus on this criterion only, " +
                         "with the exception of: 1. decorative images 2. text that is not significant 3. the text in the image is essential" +
-                        "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                        "Give the criteria an answer of failing or passing, and don't use backticks in your answers. Only respond with the JSON." +
-                        "The format is in JSON and right after this line (remember no backticks) \n" +
-                        "{\n" +
-                        "    \"overall_violation\": \"passed or failed\",\n" +
-                        "    \"violated_elements_and_reasons\": [\n" +
-                        "        {\n" +
-                        "            \"title\": \"A single sentence to describe the problem\",\n" +
-                        "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                        "            \"recommendation\": \"Recommendation to fix theviolation for this specific element\"\n" +
-                        "        }\n" +
-                        "    ]\n" +
-                        "}" +
-                        "If there are no violations, the response should be (remember no backticks): \n" +
-                        "{\n" +
-                        "    \"overall_violation\": \"passed\",\n" +
-                        "    \"violated_elements_and_reasons\": [}\n" +
-                        "}" +
-                        "\n If nothing is provided, or you can't read the urls, you can return (remember no backticks): " +
-                        "{\n" +
-                        "    \"overall_violation\": \"N/A\",\n" +
-                        "    \"violated_elements_and_reasons\": [}\n" +
-                        "}" +
+                        formatMessage +
                         " Remember no backticks and only respond with the given format."
         ));
 
@@ -801,32 +623,10 @@ public class AiService {
                 "type", "text",
                 "text", "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                         " Do not limit your findings to the violations mentioned in common failures or test rules; explore beyond these areas for potential issues." +
-                        "The images I am going to share need to be checked based on the criteria in the WCAG 2.2 rules, criteria 1.4.10. " +
+                        "The images I am going to share need to be checked based on criteria 1.4.10, mentioned in the WCAG 2.2 rules. " +
                         "They will contain screenshots of a web application, one that is in its regular size, and one zoomed in 400% " +
                         "Analyze these according to the criteria mentioned in WCAG 1.4.10. Please pay attention to: 1. content disappearing 2. content requiring scrolling in two dimensions" +
-                        "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                        "Give the criteria an answer of failing or passing, and don't use backticks in your answers. Only respond with the JSON." +
-                        "The format is in JSON and right after this line (remember no backticks) \n" +
-                        "{\n" +
-                        "    \"overall_violation\": \"passed or failed\",\n" +
-                        "    \"violated_elements_and_reasons\": [\n" +
-                        "        {\n" +
-                        "            \"title\": \"A single sentence to describe the problem\",\n" +
-                        "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                        "            \"recommendation\": \"Recommendation to fix theviolation for this specific element\"\n" +
-                        "        }\n" +
-                        "    ]\n" +
-                        "}" +
-                        "If there are no violations, the response should be (remember no backticks): \n" +
-                        "{\n" +
-                        "    \"overall_violation\": \"passed\",\n" +
-                        "    \"violated_elements_and_reasons\": [}\n" +
-                        "}" +
-                        "\n If nothing is provided, or you can't read the urls, you can return (remember no backticks): " +
-                        "{\n" +
-                        "    \"overall_violation\": \"N/A\",\n" +
-                        "    \"violated_elements_and_reasons\": [}\n" +
-                        "}" +
+                        formatMessage +
                         " Remember no backticks and only respond with the given format."
         ));
 
@@ -881,30 +681,8 @@ public class AiService {
                 "type", "text",
                 "text", "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                         " Do not limit your findings to the violations mentioned in common failures or test rules; explore beyond these areas for potential issues." +
-                        "The image/images I am going to share need to be checked based on the criteria in the WCAG 2.2 rules, criteria 1.4.12. Focus on this criterion." +
-                        "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                        "Give the criteria an answer of failing or passing, and don't use backticks in your answers. Only respond with the JSON." +
-                        "The format is in JSON and right after this line (remember no backticks) \n" +
-                        "{\n" +
-                        "    \"overall_violation\": \"passed or failed\",\n" +
-                        "    \"violated_elements_and_reasons\": [\n" +
-                        "        {\n" +
-                        "            \"title\": \"A single sentence to describe the problem\",\n" +
-                        "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                        "            \"recommendation\": \"Recommendation to fix theviolation for this specific element\"\n" +
-                        "        }\n" +
-                        "    ]\n" +
-                        "}" +
-                        "If there are no violations, the response should be (remember no backticks): \n" +
-                        "{\n" +
-                        "    \"overall_violation\": \"passed\",\n" +
-                        "    \"violated_elements_and_reasons\": [}\n" +
-                        "}" +
-                        "\n If nothing is provided, or you can't read the urls, you can return (remember no backticks): " +
-                        "{\n" +
-                        "    \"overall_violation\": \"N/A\",\n" +
-                        "    \"violated_elements_and_reasons\": [}\n" +
-                        "}" +
+                        "The image/images I am going to share need to be checked based on criteria 1.4.12, mentioned in the WCAG 2.2 rules." +
+                        formatMessage +
                         " Remember no backticks and only respond with the given format."
         ));
 
@@ -958,32 +736,12 @@ public class AiService {
                 "messages", List.of(Map.of("role", "user", "content",
                         "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                                 "Only follow the rules provided by the official WCAG rules themselves." +
-                                "The elements I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 2.4.2. " +
-                                "Determine if the titles are descriptive enough and give you a clue on what the website could be about" +
-                                "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                                "Give the criteria an answer of failing or passing, and DO NOT use backticks in your answers. Only respond with the JSON." +
-                                "The format is in JSON and right after this line (remember no backticks) \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed or failed\",\n" +
-                                "    \"violated_elements_and_reasons\": [\n" +
-                                "        {\n" +
-                                "            \"title\": \"A single sentence to describe the problem\",\n" +
-                                "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                                "            \"recommendation\": \"Recommendation to fix the violation for this specific element\"\n" +
-                                "        }\n" +
-                                "    ]\n" +
-                                "}" +
-                                "If there are no violations, the response should be (remember no backticks): \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "\n If no element is provided you can return (remember no backticks): " +
-                                "{\n" +
-                                "    \"overall_violation\": \"N/A\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + e))
+                                "The elements I am going to share needs to be checked based on criteria 2.4.2, mentioned in the WCAG 2.2 rules. " +
+                                "Determine if the titles are descriptive enough and give you a clue on what the website could be about. " +
+                                "The elements that belong to the titles will not be shared, so try te be mindful and look at a broader picture. " +
+                                "Try to see if you can determine what might be said with the title and if it, in general, is a descriptive title." +
+                                formatMessage +
+                                "Here are the elements that need to be examined: " + e))
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
@@ -1015,32 +773,10 @@ public class AiService {
                 "messages", List.of(Map.of("role", "user", "content",
                         "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                                 "Only follow the rules provided by the official WCAG rules themselves." +
-                                "The elements I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 2.4.4. " +
+                                "The elements I am going to share needs to be checked based on criteria 2.4.4, mentioned in the WCAG 2.2 rules. " +
                                 "Determine if the titles are descriptive enough and give you a clue on what the link could lead to." +
-                                "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                                "Give the criteria an answer of failing or passing, and DO NOT use backticks in your answers. Only respond with the JSON." +
-                                "The format is in JSON and right after this line (remember no backticks) \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed or failed\",\n" +
-                                "    \"violated_elements_and_reasons\": [\n" +
-                                "        {\n" +
-                                "            \"title\": \"A single sentence to describe the problem\",\n" +
-                                "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                                "            \"recommendation\": \"Recommendation to fix the violation for this specific element\"\n" +
-                                "        }\n" +
-                                "    ]\n" +
-                                "}" +
-                                "If there are no violations, the response should be (remember no backticks): \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "\n If no element is provided you can return (remember no backticks): " +
-                                "{\n" +
-                                "    \"overall_violation\": \"N/A\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + e))
+                                formatMessage +
+                                "Here are the elements that need to be examined: " + e))
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
@@ -1072,32 +808,10 @@ public class AiService {
                 "messages", List.of(Map.of("role", "user", "content",
                         "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                                 "Only follow the rules provided by the official WCAG rules themselves." +
-                                "The elements I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 2.4.6. " +
-                                "Determine if the labels and heading are descriptive enough and give you a clue on what the link could lead to." +
-                                "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                                "Give the criteria an answer of failing or passing, and DO NOT use backticks in your answers. Only respond with the JSON." +
-                                "The format is in JSON and right after this line (remember no backticks) \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed or failed\",\n" +
-                                "    \"violated_elements_and_reasons\": [\n" +
-                                "        {\n" +
-                                "            \"title\": \"A single sentence to describe the problem\",\n" +
-                                "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                                "            \"recommendation\": \"Recommendation to fix the violation for this specific element\"\n" +
-                                "        }\n" +
-                                "    ]\n" +
-                                "}" +
-                                "If there are no violations, the response should be (remember no backticks): \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "\n If no element is provided you can return (remember no backticks): " +
-                                "{\n" +
-                                "    \"overall_violation\": \"N/A\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + e))
+                                "The elements I am going to share needs to be checked based on criteria 2.4.6, mentioned in the WCAG 2.2 rules. " +
+                                "Determine if the labels and heading are descriptive enough and give you a clue on what they mean." +
+                                formatMessage +
+                                "Here are the elements that need to be examined: " + e))
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
@@ -1129,32 +843,10 @@ public class AiService {
                 "messages", List.of(Map.of("role", "user", "content",
                         "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                                 "Only follow the rules provided by the official WCAG rules themselves." +
-                                "The elements I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 2.5.3. " +
+                                "The elements I am going to share needs to be checked based on criteria 2.5.3, mentioned in the WCAG 2.2 rules. " +
                                 "Determine if the labels have a similar name as the text they are presenting." +
-                                "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                                "Give the criteria an answer of failing or passing, and DO NOT use backticks in your answers. Only respond with the JSON." +
-                                "The format is in JSON and right after this line (remember no backticks) \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed or failed\",\n" +
-                                "    \"violated_elements_and_reasons\": [\n" +
-                                "        {\n" +
-                                "            \"title\": \"A single sentence to describe the problem\",\n" +
-                                "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                                "            \"recommendation\": \"Recommendation to fix the violation for this specific element\"\n" +
-                                "        }\n" +
-                                "    ]\n" +
-                                "}" +
-                                "If there are no violations, the response should be (remember no backticks): \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "\n If no element is provided you can return (remember no backticks): " +
-                                "{\n" +
-                                "    \"overall_violation\": \"N/A\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + e))
+                                formatMessage +
+                                "Here are the elements that need to be examined: " + e))
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
@@ -1186,28 +878,11 @@ public class AiService {
                 "messages", List.of(Map.of("role", "user", "content",
                         "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                                 "Do not limit your findings to the violations mentioned in common failures or test rules; explore beyond these areas for potential issues." +
-                                "The elements I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 3.1.1. " +
-                                "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                                "Give the criteria an answer of failing or passing, and don't use backticks in your answers. Only respond with the JSON." +
-                                "The format is in JSON and right after this line (remember no backticks) \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed or failed\",\n" +
-                                "    \"violated_elements_and_reasons\": [\n" +
-                                "        {\n" +
-                                "            \"title\": \"A single sentence to describe the problem\",\n" +
-                                "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                                "            \"recommendation\": \"Recommendation to fix theviolation for this specific element\"\n" +
-                                "        }\n" +
-                                "    ]\n" +
-                                "}" +
-                                "If there are no violations, the response should be (remember no backticks): \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
+                                "The elements I am going to share needs to be checked based on criteria 3.1.1, mentioned in the WCAG 2.2 rules. " +
+                                formatMessage +
                                 "The element has already been checked, i will provide you with a boolean that determines whether the website contains a lang attribute. The boolean is: " + e +
-                        "which means that it is " + e + " that the website contains a lang element. Please only check if the element is present, the other rule will check if it is valid"  +
-                                " And finally the URL of the website: " + url))
+                        "which means that it is " + e + " that the website contains a lang element. Please only check if the element is present, the other rule will check if it is valid"
+                ))
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
@@ -1239,91 +914,10 @@ public class AiService {
                 "messages", List.of(Map.of("role", "user", "content",
                         "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                                 "Only follow the rules provided by the official WCAG rules themselves." +
-                                "The elements I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 3.1.2. " +
-                                "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                                "Give the criteria an answer of failing or passing, and don't use backticks in your answers. Only respond with the JSON." +
-                                "The format is in JSON and right after this line (remember no backticks) \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed or failed\",\n" +
-                                "    \"violated_elements_and_reasons\": [\n" +
-                                "        {\n" +
-                                "            \"title\": \"A single sentence to describe the problem\",\n" +
-                                "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                                "            \"recommendation\": \"Recommendation to fix theviolation for this specific element\"\n" +
-                                "        }\n" +
-                                "    ]\n" +
-                                "}" +
-                                "If there are no violations, the response should be (remember no backticks): \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "\n If no element is provided you can return (remember no backticks): " +
-                                "{\n" +
-                                "    \"overall_violation\": \"N/A\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + s +
-                                " And finally the URL of the website: " + url))
-        );
-
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-
-        Map<String, Object> response = restTemplate.postForObject(
-                "https://api.groq.com/openai/v1/chat/completions",
-                request,
-                Map.class
-        );
-
-        // Extract the content from the response
-        List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
-        Map<String, Object> msg = (Map<String, Object>) choices.get(0).get("message");
-        return msg.get("content").toString();
-    }
-
-    /**
-     * Used for rule 3.3.1
-     * @param e Elements that need to be analyzed
-     * @return String JSON format with the answer
-     */
-    public String checkErrorIdentification(Elements e, String url){
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(apiKey);
-
-        Map<String, Object> body = Map.of(
-                "model", "openai/gpt-oss-120b",
-                "messages", List.of(Map.of("role", "user", "content",
-                        "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
-                                "Only follow the rules provided by the official WCAG rules themselves." +
-                                "The elements I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 3.3.1. " +
-                                "The entire form will be shared with you, and it is your job to make sure any form of error detection in present. Try to look for subtle components, such as div right underneath" +
-                                "the input fields. Or hidden elements that could potentially be used to show error." +
-                                "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                                "Give the criteria an answer of failing or passing, and DO NOT use backticks in your answers. Only respond with the JSON." +
-                                "The format is in JSON and right after this line (remember no backticks) \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed or failed\",\n" +
-                                "    \"violated_elements_and_reasons\": [\n" +
-                                "        {\n" +
-                                "            \"title\": \"A single sentence to describe the problem\",\n" +
-                                "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                                "            \"recommendation\": \"Recommendation to fix the violation for this specific element\"\n" +
-                                "        }\n" +
-                                "    ]\n" +
-                                "}" +
-                                "If there are no violations, the response should be (remember no backticks): \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "\n If no element is provided you can return (remember no backticks): " +
-                                "{\n" +
-                                "    \"overall_violation\": \"N/A\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + e +
-                                " And finally the URL of the website: " + url))
+                                "The elements I am going to share needs to be checked based on criteria 3.1.2, mentioned in the WCAG 2.2 rules. " +
+                                formatMessage +
+                                "Here are the elements that need to be examined: " + s
+                ))
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
@@ -1355,33 +949,11 @@ public class AiService {
                 "messages", List.of(Map.of("role", "user", "content",
                         "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                                 "Only follow the rules provided by the official WCAG rules themselves." +
-                                "The elements I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 3.3.2. " +
+                                "The elements I am going to share needs to be checked based on criteria 3.3.1, mentioned in the WCAG 2.2 rules. " +
                                 "The entire form will be shared with you, and it is your job to make sure any form of error detection in present." +
-                                "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                                "Give the criteria an answer of failing or passing, and DO NOT use backticks in your answers. Only respond with the JSON." +
-                                "The format is in JSON and right after this line (remember no backticks) \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed or failed\",\n" +
-                                "    \"violated_elements_and_reasons\": [\n" +
-                                "        {\n" +
-                                "            \"title\": \"A single sentence to describe the problem\",\n" +
-                                "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                                "            \"recommendation\": \"Recommendation to fix the violation for this specific element\"\n" +
-                                "        }\n" +
-                                "    ]\n" +
-                                "}" +
-                                "If there are no violations, the response should be (remember no backticks): \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "\n If no element is provided you can return (remember no backticks): " +
-                                "{\n" +
-                                "    \"overall_violation\": \"N/A\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + e +
-                                " And finally the URL of the website: " + url))
+                                formatMessage +
+                                "Here are the elements that need to be examined: " + e
+                ))
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
@@ -1413,33 +985,10 @@ public class AiService {
                 "messages", List.of(Map.of("role", "user", "content",
                         "You are an Accessibility Expert (WCAG Specialist) responsible for detecting WCAG 2.2 violations on websites." +
                                 "Only follow the rules provided by the official WCAG rules themselves." +
-                                "The elements I am going to share needs to be checked based on the criteria in the WCAG 2.2 rules, criteria 4.1.2. " +
+                                "The elements I am going to share needs to be checked based on criteria 4.1.2, mentioned in the WCAG 2.2 rules. " +
                                 "The entire form will be shared with you, and it is your job to make sure any form of error detection in present." +
-                                "Respond in the format I hand to you, making sure to respond only with that JSON and nothing else. " +
-                                "Give the criteria an answer of failing or passing, and DO NOT use backticks in your answers. Only respond with the JSON." +
-                                "The format is in JSON and right after this line (remember no backticks) \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed or failed\",\n" +
-                                "    \"violated_elements_and_reasons\": [\n" +
-                                "        {\n" +
-                                "            \"title\": \"A single sentence to describe the problem\",\n" +
-                                "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-                                "            \"recommendation\": \"Recommendation to fix the violation for this specific element\"\n" +
-                                "        }\n" +
-                                "    ]\n" +
-                                "}" +
-                                "If there are no violations, the response should be (remember no backticks): \n" +
-                                "{\n" +
-                                "    \"overall_violation\": \"passed\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "\n If no element is provided you can return (remember no backticks): " +
-                                "{\n" +
-                                "    \"overall_violation\": \"N/A\",\n" +
-                                "    \"violated_elements_and_reasons\": [}\n" +
-                                "}" +
-                                "Here are the elements that need to be examined (elements can't be forgotten, so if no element is provided please respond with the correct response): " + s +
-                        " And finally the URL of the website: " + url))
+                                formatMessage +
+                                "Here are the elements that need to be examined: " + s ))
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
