@@ -19,12 +19,6 @@ function Audit() {
     const [urlSend, setUrlSend] = useState(false);
 
     useEffect(() => {
-        if (mainObjectId && !guideRefId) {
-            navigate('/audit', { replace: true });
-        }
-    }, []);
-
-    useEffect(() => {
         (async () => {
             try {
                 const res = await api.get("/guidelines/titles");
@@ -33,6 +27,14 @@ function Audit() {
                 );
                 setGuides(sorted);
                 setIsLoaded(true);
+
+                if (mainObjectId) {
+                    setMainObject(mainObjectId);
+                    setUrlSend(true);
+
+                    const auditRes = await api.get(`/audit/${mainObjectId}`);
+                    setAuditUrl(auditRes.data.url);
+                }
 
                 if (guideRefId) {
                     const found = sorted.find(g => g.refId === guideRefId);
@@ -118,7 +120,7 @@ function Audit() {
               <AuditForm
                   open={true}
                   children={activeGuide}
-                  object={mainObjectId}
+                  object={mainObject || mainObjectId}
                   close={closeForm}
               />
           )}

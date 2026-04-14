@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping( "/audit")
@@ -20,6 +21,11 @@ public class AuditController {
     @GetMapping(path = "/all", produces = "application/json")
     public List<Audit> getAllAudits(){
         return repo.findAll();
+    }
+
+    @GetMapping(path = "/{id}", produces = "application/json")
+    public Optional<Audit> getById(@PathVariable String id){
+        return repo.findById(id);
     }
 
     @PostMapping("/saveUrl")

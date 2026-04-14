@@ -1,8 +1,11 @@
 import "../style/home.css"
 import {useEffect, useState} from "react";
 import api from "../axiosConfig";
+import { useParams, useNavigate } from "react-router-dom";
 
 function Home() {
+    const navigate = useNavigate();
+
     const [audits, setAudits] = useState([]);
     const [isLoaded, setIsLoaded] = useState(false);
 
@@ -19,6 +22,10 @@ function Home() {
         })();
     }, []);
 
+    function openPage(guide){
+        navigate(`/audit/${guide.id}`);
+    }
+
     return (
         <div className="container">
             <div className="box">
@@ -34,7 +41,7 @@ function Home() {
                             <h3>Continue working on a previous audit</h3>
                             <div className="audit-container">
                                 {audits.map((a) => (
-                                    <div className="audit-card" key={a.id} title={a.url}>
+                                    <div onClick={() => openPage(a)} className="audit-card" key={a.id} title={a.url}>
                                         {a.url}
                                     </div>
                                 ))}
