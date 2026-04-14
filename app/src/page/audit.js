@@ -18,6 +18,11 @@ function Audit() {
     const [isLoaded, setIsLoaded] = useState(false);
     const [urlSend, setUrlSend] = useState(false);
 
+    useEffect(() => {
+        if (mainObjectId && !guideRefId) {
+            navigate('/audit', { replace: true });
+        }
+    }, []);
 
     useEffect(() => {
         (async () => {

@@ -20,6 +20,9 @@ public class SuccessCriteria {
 
     @Getter @Setter
     private String level;
+
+    @Getter @Setter
+    private String fetchType;
     // TODO add a object to store the answers (thinking List<>?)
 
     public SuccessCriteria() {
@@ -27,11 +30,12 @@ public class SuccessCriteria {
     }
 
 
-    public SuccessCriteria(String refId, String title, String description, String url, String level) {
+    public SuccessCriteria(String refId, String title, String description, String url, String level, String fetchType) {
         this.refId = refId;
         this.title = title;
         this.description = description;
         this.url = url;
         this.level = level;
+        this.fetchType = fetchType;
     }
 }

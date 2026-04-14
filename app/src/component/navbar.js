@@ -2,9 +2,9 @@ import '../style/navbar.css';
 
 function NavBar() {
   return (
-    <div class="container">
-        <div class="bar">
-            <p class="title">Accessibility audit</p>
+    <div className="container">
+        <div className="bar">
+            <p className="title">Accessibility audit</p>
         </div>
      </div>
   );

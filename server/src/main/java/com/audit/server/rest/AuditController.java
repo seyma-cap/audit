@@ -6,11 +6,9 @@ import com.audit.server.repo.AuditRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 
 @RestController
 @RequestMapping( "/audit")
@@ -18,6 +16,11 @@ public class AuditController {
 
     @Autowired
     private AuditRepository repo;
+
+    @GetMapping(path = "/all", produces = "application/json")
+    public List<Audit> getAllAudits(){
+        return repo.findAll();
+    }
 
     @PostMapping("/saveUrl")
     public ResponseEntity<Audit> saveUrl(@RequestBody UrlRequest body){

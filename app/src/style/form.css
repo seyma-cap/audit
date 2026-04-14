@@ -66,6 +66,24 @@ textarea {
     padding-inline: 20px;
 }
 
+.button-ai {
+    background-color: #106DAA;
+    color: #fff;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    font-family: 'Inter';
+    padding-inline: 20px;
+}
+
+input[type="file"]{
+    display: none;
+}
+
 i {
     padding: 4px;
     padding-inline: 10px;
