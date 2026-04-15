@@ -1,5 +1,14 @@
 package com.audit.server.model;
 
 public enum Score {
-    PASSED, FAILED, PASSED_REC, NA
+    PASSED("passed"),
+    FAILED("failed"),
+    PASSED_REC("passed(recomm)"),
+    NA("N/A");
+
+    public final String label;
+
+    Score(String label) {
+        this.label = label;
+    }
 }

@@ -26,14 +26,18 @@ function Home() {
         navigate(`/audit/${guide.id}`);
     }
 
+    function openAudit(){
+        navigate(`/audit`);
+    }
+
     return (
         <div className="container">
             <div className="box">
                 <div hidden={!isLoaded}>
                     <div className="main-title">
-                        <h2>
+                        <h1>
                             Home
-                        </h2>
+                        </h1>
                     </div>
                     <hr className="solid"></hr>
                     <div className="content">
@@ -49,7 +53,10 @@ function Home() {
                         </div>
                         <div className="content-item">
                             <h3>New audit?</h3>
-
+                            <button style={{"background-color": "#106DAA"}}
+                                    className="button-form"
+                                    onClick={() => openAudit()}>Create new audit
+                                <i className="bi bi-plus-circle-fill"></i></button>
                         </div>
                     </div>
                 </div>

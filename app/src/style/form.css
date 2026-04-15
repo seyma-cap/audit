@@ -55,7 +55,7 @@ textarea {
 .button-form {
     background-color: #1EAADB;
     color: #fff;
-    padding: 16px;
+    padding: 14px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -80,6 +80,33 @@ textarea {
     padding-inline: 20px;
 }
 
+.button-add {
+    background-color: #106DAA;
+    color: #fff;
+    padding: 8px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: 'Inter';
+    padding-inline: 15px;
+}
+
+.delete-button {
+    background-color: #aa1020;
+    color: #fff;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    font-family: 'Inter';
+}
+
 input[type="file"]{
     display: none;
 }
@@ -89,6 +116,21 @@ i {
     padding-inline: 10px;
 }
 
-.style-form {
+.form-answer{
+    padding-top: 20px;
+}
 
+.form-answer-title {
+    padding-inline: 0;
+    font-size: 14px;
+}
+
+.form-header {
+    display: flex;
+    gap: 10px;
+}
+
+.styling-form {
+    margin: 10px;
+    display: flex;
 }

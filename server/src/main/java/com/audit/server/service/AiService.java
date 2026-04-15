@@ -42,7 +42,8 @@ public class AiService {
             "        {\n" +
             "            \"title\": \"A single sentence to describe the problem\",\n" +
             "            \"description\": \"Explanation of why it violates the criterion\",\n" +
-            "            \"recommendation\": \"Recommendation to fix the violation for this specific element\"\n" +
+            "            \"recommendation\": \"Recommendation to fix the violation for this specific element\",\n" +
+            "            \"comment\": \"\" (You can leave this empty)" +
             "        }\n" +
             "    ]\n" +
             "}" +
