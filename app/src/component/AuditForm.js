@@ -8,8 +8,10 @@ function AuditForm({children, object, open, close}) {
     const [scores, setScores] = useState([]);
     const [activeCriteria, setActiveCriteria] = useState(null);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
+    const [error, setError] = useState(false);
 
-    const [score, setScore] = useState(null);
+    const [score, setScore] = useState("");
 
     const [answers, setAnswers] = useState([]);
 
@@ -48,6 +50,30 @@ function AuditForm({children, object, open, close}) {
         }
         fetchData();
     }, [])
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await api.get(`/audit/getAnswer?refId=${activeCriteria.refId}&id=${object}`);
+                const items = res.data
+
+
+                setScore(items.score ?? "");
+                setAnswers(
+                    items.answers && items.answers.length > 0
+                        ? items.answers
+                        : [emptyAnswer]
+                );
+
+                setIsLoaded(true);
+        } catch (err) {
+                setScore("");
+                setAnswers([emptyAnswer]);
+                setIsSaved(false);
+            }
+        }
+        fetchData();
+    }, [activeCriteria])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -125,8 +151,34 @@ function AuditForm({children, object, open, close}) {
     }
 
     async function saveAnswer() {
-        console.log(activeCriteria.refId)
-        console.log(answers)
+        const id = object;
+        const refId = activeCriteria.refId
+
+        if (score === ""){
+            setError(true);
+            return
+        } else {
+            setError(false);
+        }
+
+        const formData = {
+            id,
+            refId,
+            score,
+            answers
+        }
+
+        try {
+            const res = await api.put(
+                `/audit/saveAnswers`,
+                formData
+            );
+            if (res.status === 200){
+                setIsSaved(true);
+            }
+        } catch (err) {
+            console.log(err)
+        }
     }
 
     function addAnswer() {
@@ -185,13 +237,21 @@ function AuditForm({children, object, open, close}) {
                                     <p>{activeCriteria.description}</p>
                                 </div>
                             )}
+                            <i hidden={!isSaved} className="alert-good">Successfully saved!</i>
+                            <i hidden={!error} className="alert-bad">Please fill in the required fields!</i>
                             <div className="form-answer">
-                                <i className="form-answer-title">Passed or failed?</i>
+                                <i className="form-answer-title required">Passed or failed?</i>
                                 <div className="form-header">
-                                    <select for="status">Choose:
-                                        <option defaultChecked="choose">Choose:</option>
+                                    <select
+                                        value={score}
+                                        onChange={(e) => setScore(e.target.value)}
+                                    >
+                                        <option value="">Choose:</option>
+
                                         {scores.map((s) => (
-                                            <option>{s}</option>
+                                            <option key={s} value={s}>
+                                                {s}
+                                            </option>
                                         ))}
                                     </select>
                                     {activeCriteria.fetchType === "text" && (

@@ -4,6 +4,9 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -14,5 +17,9 @@ public class Audit {
 
     private String url;
 
-    private AuditAnswer[] auditAnswers;
+    private List<AuditAnswer> auditAnswers = new ArrayList<>();
+
+    public void addAnswers(AuditAnswer answer){
+        auditAnswers.add(answer);
+    }
 }

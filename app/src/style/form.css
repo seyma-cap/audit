@@ -134,3 +134,18 @@ i {
     margin: 10px;
     display: flex;
 }
+
+.alert-good{
+    color: green;
+    font-size: 14px;
+}
+
+.alert-bad {
+    color: #aa1020;
+    font-size: 14px;
+}
+
+.required:after {
+    content:" *";
+    color: red;
+}

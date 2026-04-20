@@ -1,5 +1,6 @@
 package com.audit.server.model;
 
+import com.audit.server.dto.AnswerTemplate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,11 +17,5 @@ public class AuditAnswer {
 
     private Score score;
 
-    private String title;
-
-    private String description;
-
-    private String recommendation;
-
-    private String comment;
+    private AnswerTemplate[] answers;
 }
