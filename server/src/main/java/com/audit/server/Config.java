@@ -1,5 +1,6 @@
 package com.audit.server;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -12,20 +13,14 @@ import java.net.UnknownHostException;
 @EnableWebMvc
 public class Config implements WebMvcConfigurer {
 
+    @Value("${frontend.url}")
+    private String frontendUrl;
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**").
-                allowedOriginPatterns("http://localhost:*", getHostIPAddressPattern()).
+                allowedOriginPatterns(frontendUrl).
                 allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*");
-    }
-
-    private String getHostIPAddressPattern(){
-        try {
-            return "http://" + Inet4Address.getLocalHost().getHostAddress() + ":*";
-        } catch (UnknownHostException ignored){
-        }
-
-        return "htpp://192.168.*.*:*";
     }
 }
