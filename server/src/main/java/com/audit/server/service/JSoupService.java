@@ -19,7 +19,14 @@ public class JSoupService {
 
     public void getData(String url) {
         try {
-            Document webPage = Jsoup.connect(url).get();
+            Document webPage = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    .referrer("https://www.google.com/")
+                    .timeout(15000)
+                    .ignoreHttpErrors(true).get();
+
             System.out.println(webPage);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -31,7 +38,13 @@ public class JSoupService {
      */
     public Elements getAltText(String url) {
         try {
-            Document webPage = Jsoup.connect(url).get();
+            Document webPage = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    .referrer("https://www.google.com/")
+                    .timeout(15000)
+                    .ignoreHttpErrors(true).get();
 
             // extracts every element with <img> tag
             Elements x = webPage.getElementsByTag("img");
@@ -47,7 +60,13 @@ public class JSoupService {
      */
     public String getLabelsAndInput(String url){
         try {
-            Document webPage = Jsoup.connect(url).get();
+            Document webPage = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    .referrer("https://www.google.com/")
+                    .timeout(15000)
+                    .ignoreHttpErrors(true).get();
 
             // extracts every element with <img> tag
             Elements x = webPage.getElementsByTag("label");
@@ -64,7 +83,13 @@ public class JSoupService {
      */
     public Elements getAudioElements(String url){
         try {
-            Document webPage = Jsoup.connect(url).get();
+            Document webPage = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    .referrer("https://www.google.com/")
+                    .timeout(15000)
+                    .ignoreHttpErrors(true).get();
 
             Elements x = webPage.getElementsByTag("audio");
 
@@ -79,7 +104,13 @@ public class JSoupService {
      */
     public Elements getTitle(String url){
         try {
-            Document webPage = Jsoup.connect(url).get();
+            Document webPage = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    .referrer("https://www.google.com/")
+                    .timeout(15000)
+                    .ignoreHttpErrors(true).get();
 
             Elements x = webPage.getElementsByTag("title");
 
@@ -94,7 +125,13 @@ public class JSoupService {
      */
     public Elements getLinks(String url){
         try {
-            Document webPage = Jsoup.connect(url).get();
+            Document webPage = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    .referrer("https://www.google.com/")
+                    .timeout(15000)
+                    .ignoreHttpErrors(true).get();
 
             Elements x = webPage.getElementsByTag("a");
 
@@ -109,7 +146,13 @@ public class JSoupService {
      */
     public Elements getLabelsHeading(String url){
         try {
-            Document webPage = Jsoup.connect(url).get();
+            Document webPage = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    .referrer("https://www.google.com/")
+                    .timeout(15000)
+                    .ignoreHttpErrors(true).get();
 
             Elements x = webPage.select("h1, h2, h3, h4, h5, h6, label");
 
@@ -124,7 +167,13 @@ public class JSoupService {
      */
     public Elements getLabels(String url){
         try {
-            Document webPage = Jsoup.connect(url).get();
+            Document webPage = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    .referrer("https://www.google.com/")
+                    .timeout(15000)
+                    .ignoreHttpErrors(true).get();
 
             Elements x = webPage.select("label");
 
@@ -141,7 +190,13 @@ public class JSoupService {
      */
     public boolean getLangElement(String url) {
         try {
-            Document webPage = Jsoup.connect(url).get();
+            Document webPage = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    .referrer("https://www.google.com/")
+                    .timeout(15000)
+                    .ignoreHttpErrors(true).get();
 
             // checks if HTML element has lang attribute
             boolean x = webPage.getElementsByTag("html").hasAttr("lang");
@@ -158,7 +213,13 @@ public class JSoupService {
     public String getAllLangElements(String url) {
         StringBuilder sb = new StringBuilder();
         try {
-            Document webPage = Jsoup.connect(url).get();
+            Document webPage = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    .referrer("https://www.google.com/")
+                    .timeout(15000)
+                    .ignoreHttpErrors(true).get();
 
             for (Element el : webPage.getElementsByAttribute("lang")) {
                 sb.append(el.tagName())
@@ -191,8 +252,13 @@ public class JSoupService {
      */
     public Elements getFormElements(String url) {
         try {
-            System.out.println(url);
-            Document webPage = Jsoup.connect(url).get();
+            Document webPage = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    .referrer("https://www.google.com/")
+                    .timeout(15000)
+                    .ignoreHttpErrors(true).get();
 
             // extracts every element with <img> tag
             Elements x = webPage.getElementsByTag("form");
@@ -209,7 +275,13 @@ public class JSoupService {
      */
     public String getCustomElements(String url) {
         try {
-            Document webPage = Jsoup.connect(url).get();
+            Document webPage = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    .referrer("https://www.google.com/")
+                    .timeout(15000)
+                    .ignoreHttpErrors(true).get();
             StringBuilder sb = new StringBuilder();
 
             // Elements with role attribute
