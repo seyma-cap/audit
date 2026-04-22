@@ -37,7 +37,7 @@ public class AiService {
             "Give the criteria an answer of failing or passing. Don't use backticks in your answer, only respond with the JSON." +
             "The format is in JSON and right after this line \n" +
             "{\n" +
-            "    \"overall_violation\": \"passed or failed\",\n" +
+            "    \"overall_violation\": \"PASSED or FAILED\",\n" +
             "    \"violated_elements_and_reasons\": [\n" +
             "        {\n" +
             "            \"title\": \"A single sentence to describe the problem\",\n" +
@@ -49,12 +49,12 @@ public class AiService {
             "}" +
             "If there are no violations, the response should be: \n" +
             "{\n" +
-            "    \"overall_violation\": \"passed\",\n" +
+            "    \"overall_violation\": \"PASSED\",\n" +
             "    \"violated_elements_and_reasons\": [}\n" +
             "}" +
             "\n If no element is provided you can return (elements can not be forgotten): " +
             "{\n" +
-            "    \"overall_violation\": \"N/A\",\n" +
+            "    \"overall_violation\": \"NA\",\n" +
             "    \"violated_elements_and_reasons\": [}\n" +
             "}\n";
 

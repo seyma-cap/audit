@@ -12,6 +12,7 @@ function AuditForm({children, object, open, close}) {
     const [isLoaded, setIsLoaded] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
     const [error, setError] = useState(false);
+    const [failed, setFailed] = useState(false);
 
     const [score, setScore] = useState("");
 
@@ -110,6 +111,7 @@ function AuditForm({children, object, open, close}) {
     }
 
     async function generateWithImage(e) {
+        setFailed(false);
         const formData = new FormData();
 
         for (let i = 0; i < e.target.files.length; i++) {
@@ -130,12 +132,15 @@ function AuditForm({children, object, open, close}) {
             setScore(res.data.overall_violation);
             setAnswers(dataMapper(res.data.violated_elements_and_reasons));
         } catch (err) {
-            console.log(err);
+            if (err.status === 500){
+                setFailed(true);
+            }
         }
         setIsLoading(false);
     }
 
     async function generateAnswer() {
+        setFailed(false);
         setIsLoading(true);
         try {
             await api.get(`/criteria/ai_put?criteriaId=${activeCriteria.refId}&auditId=${object}`)
@@ -144,7 +149,9 @@ function AuditForm({children, object, open, close}) {
                     setAnswers(dataMapper(res.data.violated_elements_and_reasons));
                 });
         } catch (err) {
-            console.log(err)
+            if (err.status === 500){
+                setFailed(true);
+            }
         }
         setIsLoading(false);
     }
@@ -254,6 +261,7 @@ function AuditForm({children, object, open, close}) {
                             )}
                             <i hidden={!isSaved} className="alert-good">Successfully saved!</i>
                             <i hidden={!error} className="alert-bad">Please fill in the required fields!</i>
+                            <i hidden={!failed} className="alert-bad">Could not generate, please try again later</i>
                             <div className="form-answer">
                                 <i className="form-answer-title required">Passed or failed?</i>
                                 <div className="form-header">
