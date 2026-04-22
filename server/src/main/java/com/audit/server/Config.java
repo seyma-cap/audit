@@ -13,13 +13,9 @@ import java.net.UnknownHostException;
 @EnableWebMvc
 public class Config implements WebMvcConfigurer {
 
-    @Value("${frontend.url}")
-    private String frontendUrl;
-
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**").
-                allowedOriginPatterns(frontendUrl).
                 allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*");
     }

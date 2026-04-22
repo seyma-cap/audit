@@ -191,6 +191,7 @@ public class JSoupService {
      */
     public Elements getFormElements(String url) {
         try {
+            System.out.println(url);
             Document webPage = Jsoup.connect(url).get();
 
             // extracts every element with <img> tag
