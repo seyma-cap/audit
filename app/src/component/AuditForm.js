@@ -1,5 +1,5 @@
 import "../style/form.css";
-import {useEffect, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import api from "../axiosConfig";
 import AnswerTemplate from "./AnswerTemplate";
 import LoadComponent from "./LoadComponent";
@@ -18,12 +18,12 @@ function AuditForm({children, object, open, close}) {
 
     const [answers, setAnswers] = useState([]);
 
-    const emptyAnswer = {
+    const emptyAnswer = useMemo(() => ({
         title: "",
         description: "",
         recommendation: "",
         comment: "",
-    };
+    }), []);
 
     const handleAnswerChange = (index, property, value) => {
         setAnswers(prev =>
@@ -44,41 +44,50 @@ function AuditForm({children, object, open, close}) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await api.get(`/guidelines/` + children.id);
-                const items = res.data.successCriteria
+                const res = await api.get(`/guidelines/${children.id}`);
+                const items = res.data.successCriteria;
                 setCriteria(items);
                 setActiveCriteria(items[0]);
                 setIsLoaded(true);
             } catch (err) {
                 console.error(err);
             }
+        };
+
+        if (children?.id) {
+            fetchData();
         }
-        fetchData();
-    }, [])
+    }, [children.id]);
 
     useEffect(() => {
+        if (!activeCriteria || !object) return;
+
         const fetchData = async () => {
             try {
-                const res = await api.get(`/audit/getAnswer?refId=${activeCriteria.refId}&id=${object}`);
-                const items = res.data
+                const res = await api.get(
+                    `/audit/getAnswer?refId=${activeCriteria.refId}&id=${object}`
+                );
 
+                const items = res.data;
 
                 setScore(items.score ?? "");
                 setAnswers(
-                    items.answers && items.answers.length > 0
+                    items.answers?.length > 0
                         ? items.answers
                         : [emptyAnswer]
                 );
 
                 setIsLoaded(true);
-        } catch (err) {
+            } catch (err) {
                 setScore("");
                 setAnswers([emptyAnswer]);
                 setIsSaved(false);
             }
-        }
+        };
+
         fetchData();
-    }, [activeCriteria])
+    }, [activeCriteria, object, emptyAnswer]);
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -253,7 +262,9 @@ function AuditForm({children, object, open, close}) {
                         <form>
                             {activeCriteria && (
                                 <div>
-                                    <a href={activeCriteria.url} target="_blank" className="form-title">
+                                    <a href={activeCriteria.url} target="_blank"
+                                       rel="noopener noreferrer"
+                                       className="form-title">
                                         {activeCriteria.refId} {activeCriteria.title}
                                     </a>
                                     <p>{activeCriteria.description}</p>

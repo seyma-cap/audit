@@ -1,7 +1,7 @@
 import "../style/home.css"
 import {useEffect, useState} from "react";
 import api from "../axiosConfig";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function Home() {
     const navigate = useNavigate();
