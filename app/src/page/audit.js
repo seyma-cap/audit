@@ -44,7 +44,7 @@ function Audit() {
                 console.error(err);
             }
         })();
-    }, [guideRefId]);
+    }, [guideRefId, mainObjectId]);
 
     function openForm(guide){
         setActiveGuide(guide);
